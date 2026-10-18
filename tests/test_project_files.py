@@ -39,7 +39,7 @@ def test_pyproject_metadata():
 def test_ci_runs_tests_and_scanner():
     ci = (ROOT / ".github/workflows/ci.yml").read_text()
     assert "uv run --frozen pytest" in ci and "scripts/check_public.py" in ci and "macos" in ci and "ubuntu" in ci
-    assert "uv sync --frozen" in ci and "astral-sh/setup-uv@v5" in ci
+    assert "uv sync --frozen" in ci and "astral-sh/setup-uv@v10.2.0" in ci and "actions/checkout@v7" in ci
 
 
 def test_disclaimer_covers_medical_affiliation_trademarks_and_warranty():
