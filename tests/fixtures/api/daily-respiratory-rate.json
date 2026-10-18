@@ -1,0 +1,10 @@
+{
+  "dailyRespiratoryRate": {
+    "date": {
+      "year": 2030,
+      "month": 1,
+      "day": 15
+    },
+    "breathsPerMinute": 14.5
+  }
+}

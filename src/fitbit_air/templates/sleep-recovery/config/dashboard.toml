@@ -1,0 +1,3 @@
+tabs = ["today", "sleep", "trends", "activity"]
+today_cards = ["sleep_debt", "activity", "body"]
+trend_metrics = ["rhr", "hrv_7d", "sleep_debt_h", "score:sleep", "score:recovery", "sedentary_h"]

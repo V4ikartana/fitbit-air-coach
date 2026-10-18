@@ -1,0 +1,4 @@
+# Examples of personal overrides (commented out). Each needs a reason; safety rails can only get stricter.
+# [params.steps_benchmark]
+# value = 8000
+# reason = "My own daily target"

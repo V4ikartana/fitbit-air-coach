@@ -1,0 +1,12 @@
+{
+  "dailyOxygenSaturation": {
+    "date": {
+      "year": 2030,
+      "month": 1,
+      "day": 15
+    },
+    "averagePercentage": 96.5,
+    "lowerBoundPercentage": 95.0,
+    "upperBoundPercentage": 98.0
+  }
+}

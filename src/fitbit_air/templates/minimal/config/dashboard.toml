@@ -1,0 +1,4 @@
+# Dashboard layout. Run `fitbit-air dashboard build` after editing.
+tabs = ["today", "trends", "sleep", "activity", "bodyage"]
+today_cards = ["sleep_debt", "activity", "body"]
+default_range_days = 30

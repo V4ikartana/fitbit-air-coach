@@ -1,0 +1,501 @@
+# Every study, guideline and design choice behind the analysis. Code reads all numeric parameters from
+# [params]; each score and insight cites ids from here. `design_choice = true` marks our own choices.
+
+[[source]]
+id = "plews2013_hrv"
+citation = "Plews DJ, Laursen PB, Stanley J, Kilding AE, Buchheit M. Training adaptation and heart rate variability in elite endurance athletes: opening the door to effective monitoring. Sports Med 2013;43:773-781"
+doi = "10.1007/s40279-013-0071-8"
+used_for = ["recovery.hrv", "baseline.hrv_band"]
+effect = "Judge HRV with a 7-day rolling mean of ln(RMSSD) against a normal band of baseline mean +/- 0.5 SD"
+
+[[source]]
+id = "buchheit2014_monitoring"
+citation = "Buchheit M. Monitoring training status with HR measures: do all roads lead to Rome? Front Physiol 2014;5:73"
+doi = "10.3389/fphys.2014.00073"
+used_for = ["recovery.rhr", "recovery.hrv"]
+effect = "Resting HR and HRV deviations from an individual's baseline indicate fatigue and readiness"
+
+[[source]]
+id = "buysse2014_ru_sated"
+citation = "Buysse DJ. Sleep health: can we define it? Does it matter? Sleep 2014;37:9-17"
+doi = "10.5665/sleep.3298"
+used_for = ["sleep.efficiency", "sleep.timing", "sleep.dimensions"]
+effect = "Sleep health dimensions RU-SATED: regularity, satisfaction, alertness, timing, efficiency, duration"
+
+[[source]]
+id = "watson2015_sleep_duration"
+citation = "Watson NF et al. Recommended amount of sleep for a healthy adult: a joint consensus statement of the AASM and Sleep Research Society. Sleep 2015;38:843-844"
+doi = "10.5665/sleep.4716"
+used_for = ["sleep.duration"]
+effect = "Adults should sleep 7 or more hours per night regularly"
+
+[[source]]
+id = "phillips2017_sri"
+citation = "Phillips AJK et al. Irregular sleep/wake patterns are associated with poorer academic performance and delayed circadian and sleep/wake timing. Sci Rep 2017;7:3216"
+doi = "10.1038/s41598-017-03171-4"
+used_for = ["sleep.regularity"]
+effect = "Sleep Regularity Index: probability of the same sleep/wake state at time points 24 h apart, scaled -100..100"
+
+[[source]]
+id = "windred2024_sri_mortality"
+citation = "Windred DP et al. Sleep regularity is a stronger predictor of mortality risk than sleep duration: a prospective cohort study. Sleep 2024;47(1):zsad253"
+doi = "10.1093/sleep/zsad253"
+used_for = ["sleep.regularity"]
+effect = "UK Biobank median SRI 81; top four SRI quintiles had 20-48% lower all-cause mortality than the least regular"
+
+[[source]]
+id = "fullagar2015_sleep_athletes"
+citation = "Fullagar HHK et al. Sleep and athletic performance: the effects of sleep loss on exercise performance, and physiological and cognitive responses to exercise. Sports Med 2015;45:161-186"
+doi = "10.1007/s40279-014-0260-0"
+used_for = ["recovery.sleep"]
+effect = "Sleep loss impairs recovery and next-day performance"
+
+[[source]]
+id = "mishra2020_presymptomatic"
+citation = "Mishra T et al. Pre-symptomatic detection of COVID-19 from smartwatch data. Nat Biomed Eng 2020;4:1208-1220"
+doi = "10.1038/s41551-020-00640-6"
+used_for = ["strain"]
+effect = "Resting-HR rises vs personal baseline preceded symptom onset in ~63% of COVID-19 cases"
+
+[[source]]
+id = "quer2021_wearables_covid"
+citation = "Quer G et al. Wearable sensor data and self-reported symptoms for COVID-19 detection. Nat Med 2021;27:73-77"
+doi = "10.1038/s41591-020-1123-x"
+used_for = ["strain"]
+effect = "Deviations in resting HR and sleep from personal baselines discriminate illness"
+
+[[source]]
+id = "page1954_cusum"
+citation = "Page ES. Continuous inspection schemes. Biometrika 1954;41:100-115"
+doi = "10.1093/biomet/41.1-2.100"
+used_for = ["strain.cusum"]
+effect = "Cumulative-sum control chart for detecting small persistent shifts"
+
+[[source]]
+id = "safety_thresholds"
+citation = "Clinical conventions: sustained resting tachycardia and low overnight SpO2 warrant assessment. Thresholds and night counts are our choice (params safety_*)."
+used_for = ["safety"]
+effect = "Absolute thresholds independent of personal baselines"
+design_choice = true
+
+[[source]]
+id = "design_sleep_weights"
+citation = "Design choice: weighted sleep score over duration, regularity, efficiency and timing (weights in params w_*)"
+used_for = ["sleep.score"]
+effect = "Weights informed by duration guidelines and the regularity-mortality evidence; not from a single paper"
+design_choice = true
+
+[[source]]
+id = "design_sri_mapping"
+citation = "Design choice: linear mapping of SRI onto a bounded subscore (anchors in params sri_zero and sri_full)"
+used_for = ["sleep.regularity"]
+effect = "Maps SRI onto a bounded subscore; naps are excluded, so values run slightly higher than UK Biobank's all-sleep SRI"
+design_choice = true
+
+[[source]]
+id = "design_recovery_weights"
+citation = "Design choice: weighted recovery score over HRV, resting HR and sleep components, each scaled by the normal CDF of its z-score (weights in params rec_w_*)"
+used_for = ["recovery.score"]
+effect = "Transparent combination of the best-supported readiness markers; not a validated formula"
+design_choice = true
+
+[[source]]
+id = "design_baseline_minimums"
+citation = "Design choice: minimum valid days before recovery and strain signals are shown (params min_n_*)"
+used_for = ["baseline.minimums"]
+effect = "Scores and signals wait until enough of your own valid days exist for a stable personal baseline"
+design_choice = true
+
+[[source]]
+id = "design_stress_index"
+citation = "Design choice (experimental): share of waking sedentary minutes with HR above the personal sedentary median by a set margin (params stress_*)"
+used_for = ["stress"]
+effect = "Trend-only physiological stress proxy; weaker evidence, never scored"
+design_choice = true
+
+[[source]]
+id = "ding2025_steps"
+citation = "Ding D et al. Daily steps and health outcomes in adults: a systematic review and dose-response meta-analysis. Lancet Public Health 2025;10(8):e668-e681"
+doi = "10.1016/S2468-2667(25)00164-1"
+used_for = ["activity.steps", "bodyage.steps"]
+effect = "All-cause mortality falls non-linearly with daily steps; most of the benefit has accrued by about 7,000 steps per day"
+ref = "Table 2, all-cause mortality, 1,000-step increments vs 2,000/day"
+
+[[source]]
+id = "who2020_pa"
+citation = "Bull FC et al. World Health Organization 2020 guidelines on physical activity and sedentary behaviour. Br J Sports Med 2020;54:1451-1462"
+doi = "10.1136/bjsports-2020-102955"
+used_for = ["activity.mvpa", "activity.strength"]
+effect = "Adults: 150-300 min/week moderate (vigorous counts double) and muscle-strengthening on 2 or more days per week"
+
+[[source]]
+id = "ekelund2019_sedentary"
+citation = "Ekelund U et al. Dose-response associations between accelerometry measured physical activity and sedentary time and all cause mortality. BMJ 2019;366:l4570"
+doi = "10.1136/bmj.l4570"
+used_for = ["activity.sedentary"]
+effect = "Mortality risk rises steeply with sedentary time beyond roughly 9-10 hours per day"
+
+[[source]]
+id = "shcherbina2017_ee_accuracy"
+citation = "Shcherbina A et al. Accuracy in wrist-worn, sensor-based measurements of heart rate and energy expenditure in a diverse cohort. J Pers Med 2017;7:3"
+doi = "10.3390/jpm7020003"
+used_for = ["weight"]
+effect = "Wrist-worn energy expenditure estimates are inaccurate, so calories are context only"
+
+[[source]]
+id = "donnelly2009_acsm_weight"
+citation = "Donnelly JE et al. ACSM position stand: appropriate physical activity intervention strategies for weight loss and prevention of weight regain for adults. Med Sci Sports Exerc 2009;41:459-471"
+doi = "10.1249/MSS.0b013e3181949333"
+used_for = ["weight.rate"]
+effect = "Gradual loss preserves lean mass; a pace guide of about 0.5-1% of body weight per week"
+
+[[source]]
+id = "karvonen1957"
+citation = "Karvonen MJ, Kentala E, Mustala O. The effects of training on heart rate; a longitudinal study. Ann Med Exp Biol Fenn 1957;35:307-315"
+used_for = ["running.zones"]
+effect = "Training intensity expressed as a fraction of heart-rate reserve (HRmax minus resting HR)"
+
+[[source]]
+id = "tanaka2001_hrmax"
+citation = "Tanaka H, Monahan KD, Seals DR. Age-predicted maximal heart rate revisited. J Am Coll Cardiol 2001;37:153-156"
+doi = "10.1016/S0735-1097(00)01054-8"
+used_for = ["running.zones", "bodyage.vo2"]
+effect = "HRmax is about 208 - 0.7 x age"
+
+[[source]]
+id = "frandsen2025_spikes"
+citation = "Frandsen JSB et al. How much running is too much? Identifying high-risk running sessions in a 5200-person cohort study. Br J Sports Med 2025;59(17):1203-1210"
+used_for = ["running.spike"]
+effect = "A single run more than 10% longer than the longest run in the previous 30 days raised overuse-injury rates; weekly ratios did not"
+ref = "PMID 40623829; PMC12421110"
+
+[[source]]
+id = "seiler2010_intensity"
+citation = "Seiler S. What is best practice for training intensity and duration distribution in endurance athletes? Int J Sports Physiol Perform 2010;5:276-291"
+doi = "10.1123/ijspp.5.3.276"
+used_for = ["running.intensity"]
+effect = "Successful endurance training is mostly low intensity (about 80%)"
+
+[[source]]
+id = "friel_decoupling"
+citation = "Friel J. The Triathlete's Training Bible (aerobic decoupling, Pa:HR). VeloPress"
+used_for = ["running.decoupling"]
+effect = "Practitioner method: HR drift relative to pace below 5% on a steady aerobic run indicates a solid aerobic base"
+
+[[source]]
+id = "riegel1981"
+citation = "Riegel PS. Athletic records and human endurance. American Scientist 1981;69:285-290"
+used_for = ["running.riegel"]
+effect = "Race time scales with distance: T2 = T1 x (D2 / D1)^1.06"
+
+[[source]]
+id = "uth2004_vo2max"
+citation = "Uth N et al. Estimation of VO2max from the ratio between HRmax and HRrest - the Heart Rate Ratio Method. Eur J Appl Physiol 2004;91:111-115"
+doi = "10.1007/s00421-003-0988-y"
+used_for = ["running.vo2", "bodyage.vo2"]
+effect = "VO2max is approximately 15.3 x HRmax / HRrest (low precision)"
+
+[[source]]
+id = "kodama2009_crf"
+citation = "Kodama S et al. Cardiorespiratory fitness as a quantitative predictor of all-cause mortality and cardiovascular events in healthy men and women: a meta-analysis. JAMA 2009;301:2024-2035"
+doi = "10.1001/jama.2009.681"
+used_for = ["bodyage.vo2"]
+effect = "Each 1-MET (3.5 ml/kg/min) higher fitness is associated with 13% lower all-cause mortality"
+
+[[source]]
+id = "kaminsky2022_friend"
+citation = "Kaminsky LA et al. Updated reference standards for cardiorespiratory fitness measured with cardiopulmonary exercise testing: data from FRIEND. Mayo Clin Proc 2022;97:285-293"
+doi = "10.1016/j.mayocp.2021.08.020"
+used_for = ["bodyage.vo2_ref"]
+effect = "Normal VO2max for men aged 20-29 is about 46.5 ml/kg/min"
+ref = "Value read from a secondary reproduction of the paper's table; primary table not accessed"
+
+[[source]]
+id = "zhang2016_rhr"
+citation = "Zhang D, Shen X, Qi X. Resting heart rate and all-cause and cardiovascular mortality in the general population: a meta-analysis. CMAJ 2016;188:E53-E63"
+doi = "10.1503/cmaj.150535"
+used_for = ["bodyage.rhr"]
+effect = "Each 10 bpm higher resting heart rate is associated with 9% higher all-cause mortality"
+
+[[source]]
+id = "tudorlocke2019_cadence"
+citation = "Tudor-Locke C et al. Walking cadence (steps/min) and intensity in 21-40 year olds: CADENCE-adults. Int J Behav Nutr Phys Act 2019;16:8"
+doi = "10.1186/s12966-019-0769-6"
+used_for = ["activity.mvpa", "bodyage.mvpa"]
+effect = "Heuristic thresholds of 100 and 130 steps/min represent absolutely defined moderate (3 METs) and vigorous (6 METs) walking intensity"
+ref = "Regression 102 and 129 steps/min for 3 and 6 METs; heuristic 100 (PPV 91.4%) and 130 (PPV 70.7%); lab treadmill study, n = 76, BMI 24.8 +/- 3.4"
+
+[[source]]
+id = "arem2015_pa"
+citation = "Arem H et al. Leisure time physical activity and mortality: a detailed pooled analysis of the dose-response relationship. JAMA Intern Med 2015;175:959-967"
+doi = "10.1001/jamainternmed.2015.0533"
+used_for = ["bodyage.mvpa"]
+effect = "Meeting 1-2x the minimum guideline (150-300 min/week) is associated with 31% lower mortality; benefit plateaus at 3-5x"
+ref = "Category HRs: 0 1.00, >0-<150 0.80, 150-300 0.69, 300-450 0.63, 450-1500 0.61, >=1500 0.69; anchors at category midpoints, log-linear interpolation between category midpoints"
+
+[[source]]
+id = "momma2022_strength"
+citation = "Momma H et al. Muscle-strengthening activities are associated with lower risk and mortality in major non-communicable diseases. Br J Sports Med 2022;56:755-763"
+doi = "10.1136/bjsports-2021-105061"
+used_for = ["bodyage.strength"]
+effect = "J-shaped association with maximum risk reduction of about 10-20% at 30-60 min/week of muscle strengthening"
+
+[[source]]
+id = "cappuccio2010_sleep"
+citation = "Cappuccio FP et al. Sleep duration and all-cause mortality: a systematic review and meta-analysis of prospective studies. Sleep 2010;33:585-592"
+doi = "10.1093/sleep/33.5.585"
+used_for = ["bodyage.sleep_duration"]
+effect = "Short sleep (RR 1.12) and long sleep (RR 1.30) are associated with higher all-cause mortality"
+ref = "Short <6 h 1.12, 6-9 h 1.00, long >9 h 1.30; anchors at category midpoints (5 h, 7-8 h, 10 h), log-linear interpolation between category midpoints"
+
+[[source]]
+id = "gbmc2016_bmi"
+citation = "Global BMI Mortality Collaboration. Body-mass index and all-cause mortality: individual-participant-data meta-analysis of 239 prospective studies in four continents. Lancet 2016;388:776-786"
+doi = "10.1016/S0140-6736(16)30175-1"
+used_for = ["bodyage.bmi"]
+effect = "All-cause mortality is lowest at BMI 20-25 and rises on both sides: modestly in overweight, steeply in obesity and in underweight"
+ref = "Category HRs vs 22.5-25 (all ages): 15-18.5 1.51, 18.5-20 1.13, 20-22.5 1.00, 25-27.5 1.07, 27.5-30 1.20, 30-35 1.45, 35-40 1.94, 40-60 2.76; anchors at category midpoints, log-linear interpolation between category midpoints"
+
+[[source]]
+id = "pang2021_hr_to_age"
+citation = "Pang M, Hanley JA. Translating all-cause mortality rate ratios or hazard ratios to age-, longevity-, and probability-based measures. Am J Epidemiol 2021;190:2664-2670"
+doi = "10.1093/aje/kwab178"
+used_for = ["bodyage.conversion"]
+effect = "A hazard ratio maps to an effective age difference only if it is constant over age and log-hazard is linear in age (Gompertz)"
+
+[[source]]
+id = "whoop_age_method"
+citation = "WHOOP Age white paper (2025): Gompertz conversion of hazard ratios to an age-equivalent with an overlap correction (commercial, not independently validated)"
+used_for = ["bodyage.method"]
+effect = "Concept for combining per-habit hazard ratios into one age-equivalent"
+
+[[source]]
+id = "design_body_age_overlap"
+citation = "Design choice: within each domain the strongest component counts fully and the rest at a fraction (param bodyage_overlap_weight); domains add"
+used_for = ["bodyage.overlap"]
+effect = "Avoids double counting correlated habits; not a validated weighting"
+design_choice = true
+
+[[source]]
+id = "design_reference_person"
+citation = "Design choice: reference values for a typical same-age man where no registry provides one (resting HR, steps, MVPA, BMI; params *_ref)"
+used_for = ["bodyage.reference"]
+effect = "Body age compares against a typical peer, not an ideal"
+design_choice = true
+
+[[source]]
+id = "design_weekly_progression"
+citation = "Design choice: also flag a run more than the growth factor longer than the longest run from between a week and a month earlier, capping build-up near the spike threshold per week; Frandsen's per-session rule alone allows faster weekly growth"
+used_for = ["running.weekly_progression"]
+effect = "Catches compounding week-on-week increases that never exceed the per-session spike threshold"
+design_choice = true
+
+[[source]]
+id = "design_forecast_cutback"
+citation = "Design choice: a reduced-volume week after every three build weeks in the race-completion forecast (param forecast_cutback_every)"
+used_for = ["running.forecast"]
+effect = "Makes the 10k forecast allow for cutback weeks instead of assuming uninterrupted build weeks"
+design_choice = true
+
+[params]
+# data quality
+coverage_good = 0.70
+coverage_partial = 0.30
+night_min_period_min = 180
+# baselines
+baseline_window_days = 60
+baseline_conf_full_n = 28
+min_n_recovery = 7
+min_n_signals = 14
+finding_min_confidence = 0.5   # recovery findings need at least this baseline confidence
+hrv_band_halfwidth_sd = 0.5
+hrv_roll_days = 7
+hrv_roll_min = 4
+hrv_below_days = 3       # "HRV below your band" insight: consecutive days below the Plews band
+hrv_night_only_shrink = 0.5   # until the 7-day trend is ready, last night's HRV z counts at this fraction
+hrv_below_z = -1.0       # ... and today's 7-day mean at least this far below the baseline of 7-day means
+floor_hrv = 0.05
+floor_rhr = 2.5   # a resting HR around 90 varies ~3% night to night
+floor_resp = 0.3
+floor_temp = 0.1
+floor_spo2 = 0.5
+floor_sleep_min = 20
+# sleep
+sleep_dur_ok_min_h = 7
+sleep_dur_ok_max_h = 9
+sleep_dur_zero_h = 4
+sleep_dur_long_h = 11
+sleep_dur_long_score = 70
+sri_zero = 60
+sri_full = 90
+sri_window_days = 7
+sleep_debt_window_days = 7
+sleep_debt_min_nights = 4
+debt_min_period_min = 60   # shorter staged fragments don't count as a night toward debt
+eff_zero = 0.65
+eff_full = 0.90
+timing_full_min = 30
+timing_zero_min = 120
+w_duration = 0.35
+w_regularity = 0.30
+w_efficiency = 0.20
+w_timing = 0.15
+sleep_debt_watch_h = 5
+# recovery
+rec_w_hrv = 0.50
+rec_w_rhr = 0.25
+rec_w_sleep = 0.25
+rec_hrv_roll_weight = 0.7
+rec_sleep_last_weight = 0.6
+rec_debt_zero_h = 7
+band_green = 67
+band_red = 33
+# strain signals
+sig_rhr_z = 1.5
+sig_rhr_bpm = 4
+sig_resp_br = 1.0
+sig_resp_z = 1.5
+sig_temp_dev_c = 0.5
+sig_temp_z = 2.0
+sig_hrv_z = -1.5
+sig_spo2_drop = 2.0
+cusum_k = 0.5
+cusum_h = 4.0
+strain_persist_nights = 3
+strain_max_skipped_nights = 2   # missing-RHR nights that pause the tracker; one more resets it
+# plausibility ranges: values outside are treated as missing
+plaus_spo2_min = 50
+plaus_spo2_max = 100
+plaus_rhr_min = 25
+plaus_rhr_max = 220
+# stress index (experimental)
+stress_margin_bpm = 15
+stress_baseline_days = 28
+stress_min_minutes = 60
+# safety rails
+safety_window_days = 7
+safety_rhr_bpm = 100
+safety_rhr_nights = 3
+safety_spo2_pct = 92
+safety_spo2_nights = 2
+safety_strain_days = 5  # rail fires when strain has been active MORE THAN this many consecutive days
+# activity (Phase B)
+steps_benchmark = 7000
+mvpa_target_min = 150
+cadence_moderate_spm = 100  # ~3 METs (Tudor-Locke 2019 CADENCE-Adults heuristic)
+cadence_vigorous_spm = 130  # ~6 METs; counts double, like WHO vigorous minutes
+cadence_max_spm = 250  # faster than any human cadence: an aggregated steps total, not a minute of walking
+mvpa_target_max = 300
+sedentary_watch_h = 10
+strength_target_days = 2
+activity_window_days = 7
+min_activity_days = 4
+# weight
+weight_half_life_days = 10
+weight_rate_window_days = 14
+weight_min_weighins = 3
+weight_rate_max_pct = 1.0
+weight_latest_max_age_days = 90
+# running
+hrmax_intercept = 208
+hrmax_slope = 0.7
+spike_pct = 10
+spike_moderate_pct = 30
+spike_large_pct = 100
+spike_lookback_days = 30
+decoupling_min_run_min = 20
+intensity_window_days = 28
+intensity_easy_target = 0.80
+forecast_growth = 1.10
+forecast_taper_weeks = 2
+forecast_first_run_km = 3.0
+riegel_exponent = 1.06
+riegel_min_km = 3.0
+riegel_lookback_days = 60
+uth_factor = 15.3
+weekly_lookback_min_days = 6
+forecast_cutback_every = 4
+decoupling_warmup_min = 10
+decoupling_max_cv = 0.12
+riegel_min_fraction = 0.5
+# body age
+gompertz_b = 0.087
+bodyage_window_days = 30
+bodyage_provisional_days = 30
+bodyage_full_confidence_days = 90
+bodyage_min_components = 4
+bodyage_min_days = 7
+bodyage_overlap_weight = 0.5
+bodyage_clamp_below = 15
+bodyage_clamp_above = 20
+bodyage_uncertainty_frac = 0.25
+bodyage_uncertainty_min = 2.0   # floor on the band before provisional/extrapolation widening
+bodyage_provisional_extra = 2
+vo2_ref = 46.5
+vo2_met_ml = 3.5
+vo2_hr_per_met = 0.87
+rhr_ref = 66
+rhr_hr_per_10bpm = 1.09
+steps_ref = 6500
+mvpa_ref = 150
+strength_ref = 0
+sleep_ref_min = 450
+sri_ref = 81
+bmi_ref = 26.5
+lever_steps = 7000
+lever_rhr_drop = 10
+lever_mvpa = 150
+lever_bmi_drop = 2
+lever_vo2_gain = 3.5
+lever_rhr_floor = 60
+bodyage_min_age = 18
+bodyage_extrapolation_age = 35
+bodyage_extrapolation_factor = 1.5
+plaus_vo2_min = 10
+plaus_vo2_max = 90
+plaus_bmi_min = 12
+plaus_bmi_max = 70
+plaus_sleep_min_max = 1000
+plaus_steps_max = 60000
+plaus_mvpa_max = 3000
+bodyage_trend_short_days = 30   # body-age trend: change vs this many days ago (needs this + window days of history)
+bodyage_trend_long_days = 90    # longer trend, preferred in the report when available
+bodyage_trend_deadband = 1.0    # |change| below this many years is reported as stable
+
+[bounds]
+# Explicit ranges for params whose default is <= 0 (the default rule is [v/4, v*4]).
+hrv_below_z = [-4.0, 0.0]  # z-score cut-off for "below baseline": 0 (any dip) to 4 SD below
+sig_hrv_z = [-4.0, 0.0]    # z-score cut-off for the HRV signal: 0 (any dip) to 4 SD below
+strength_ref = [0, 600]    # reference strength-training minutes per week: none to 10 hours
+# Ranges that keep the planner and the rails from dividing by zero or loosening past their evidence-based default.
+forecast_growth = [1.01, 1.10]      # weekly long-run growth: log(growth) is a divisor, so it must stay above 1
+forecast_cutback_every = [2, 4]     # a cutback week at least every 4th week; never every week
+safety_rhr_bpm = [80, 100]          # resting-HR alert level: a tighter alarm only
+safety_spo2_pct = [92, 96]          # overnight SpO2 alert level: a tighter alarm only
+spike_pct = [5, 10]                 # single-run spike flag: 5 to 10 % over the longest run in 30 days
+weight_rate_max_pct = [0.5, 1.0]    # weekly weight-loss limit: 0.5 to 1 % of body weight
+forecast_first_run_km = [1.0, 5.0]  # the first run of a plan from no runs: a short, safe start
+
+[tables.ding2025_steps]
+kind = "loglinear"
+points = [[2000, 1.00], [3000, 0.77], [4000, 0.64], [5000, 0.57], [6000, 0.54], [7000, 0.53], [8000, 0.52], [9000, 0.52], [10000, 0.52], [11000, 0.49], [12000, 0.45]]
+
+[tables.arem2015_mvpa]
+kind = "loglinear"
+points = [[0, 1.00], [75, 0.80], [225, 0.69], [375, 0.63], [600, 0.61], [1125, 0.61], [1650, 0.69]]
+
+[tables.momma2022_strength]
+kind = "linear"
+points = [[0, 1.00], [30, 0.85], [60, 0.85], [140, 1.00]]
+
+[tables.cappuccio2010_sleep]
+kind = "loglinear"
+points = [[300, 1.12], [420, 1.00], [480, 1.00], [600, 1.30]]
+
+[tables.windred2024_sri]
+kind = "step"
+points = [[-100, 1.00], [71.65, 0.80], [78.56, 0.75], [83.16, 0.72], [87.31, 0.70]]
+
+[tables.gbmc2016_bmi]
+kind = "loglinear"
+points = [[16.75, 1.51], [19.25, 1.13], [21.25, 1.00], [23.75, 1.00], [26.25, 1.07], [28.75, 1.20], [32.5, 1.45], [37.5, 1.94], [50, 2.76]]

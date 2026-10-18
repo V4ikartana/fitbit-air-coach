@@ -1,0 +1,3 @@
+tabs = ["today", "running", "trends", "sleep", "activity", "bodyage"]
+today_cards = ["plan", "sleep_debt", "activity", "body"]
+default_range_days = 30

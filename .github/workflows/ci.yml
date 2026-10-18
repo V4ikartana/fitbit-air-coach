@@ -1,0 +1,29 @@
+name: ci
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.11.26"
+          python-version: "3.12"
+      - run: uv sync --frozen
+      - run: uv run --frozen pytest -q
+      # generic rules only: CI never has the maintainer's private pattern list
+      - run: uv run --frozen python scripts/check_public.py . --private /dev/null

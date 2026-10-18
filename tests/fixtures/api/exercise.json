@@ -1,0 +1,30 @@
+{
+  "dataPointName": "users/me/dataTypes/exercise/dataPoints/synthetic-1",
+  "exercise": {
+    "interval": {
+      "startTime": "2030-01-15T00:00:00Z",
+      "startUtcOffset": "0s",
+      "endTime": "2030-01-15T00:30:00.000Z",
+      "endUtcOffset": "0s"
+    },
+    "exerciseType": "WALKING",
+    "metricsSummary": {
+      "caloriesKcal": 150,
+      "distanceMillimeters": 2000000,
+      "steps": "3000",
+      "averagePaceSecondsPerMeter": 0.84,
+      "averageHeartRateBeatsPerMinute": "110",
+      "heartRateZoneDurations": {
+        "lightTime": "1200s",
+        "moderateTime": "360s",
+        "vigorousTime": "90s",
+        "peakTime": "30s"
+      }
+    },
+    "exerciseMetadata": {},
+    "displayName": "Walk",
+    "activeDuration": "1680.000s",
+    "updateTime": "2030-01-15T00:32:00.000000Z",
+    "createTime": "2030-01-15T00:31:00.000000Z"
+  }
+}

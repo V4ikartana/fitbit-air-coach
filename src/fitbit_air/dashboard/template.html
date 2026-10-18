@@ -1,0 +1,930 @@
+<title>Fitbit Air Dashboard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column of stat bands under a sticky tab bar; rings lead Today, everything else is charts in panels. */
+:root {
+  --bg: #0c0f12; --panel: #141a1f; --panel-2: #1b232a; --line: #26313a;
+  --fg: #e6ecef; --muted: #8b99a4; --faint: #5d6a74;
+  --recovery: #3ed68c; --sleep: #6fa8ff; --age: #f2a944; --run: #c38cff;
+  --ok: #3ed68c; --warn: #f2a944; --bad: #ff6464;
+  --track: #222b33; --tip: #0f1418;
+  --display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f4f6f7; --panel: #ffffff; --panel-2: #eef2f4; --line: #dbe2e6;
+    --fg: #14191d; --muted: #5a6872; --faint: #8e9aa3;
+    --recovery: #12a663; --sleep: #2f74e0; --age: #c97a08; --run: #8a4fd6;
+    --ok: #12a663; --warn: #c97a08; --bad: #d63a3a;
+    --track: #e2e8ec; --tip: #ffffff; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f4f6f7; --panel: #ffffff; --panel-2: #eef2f4; --line: #dbe2e6;
+  --fg: #14191d; --muted: #5a6872; --faint: #8e9aa3;
+  --recovery: #12a663; --sleep: #2f74e0; --age: #c97a08; --run: #8a4fd6;
+  --ok: #12a663; --warn: #c97a08; --bad: #d63a3a;
+  --track: #e2e8ec; --tip: #ffffff; color-scheme: light;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.45; }
+.fa { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+      padding-block: 12px 32px; max-width: 1100px; margin-inline: auto; }
+.fa * { box-sizing: border-box; }
+.fa h1, .fa h2, .fa h3 { font-family: var(--display); font-weight: 600; letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.fa h1 { font-size: 26px; }
+.fa h2 { font-size: 19px; }
+.fa h3 { font-size: 15px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.mono { font-family: var(--mono); font-size: 12px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.top .grow { flex: 1 1 auto; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line);
+        font-size: 12px; color: var(--muted); background: var(--panel); }
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+.chip.live .dot { background: var(--ok); }
+.chip.snap .dot { background: var(--warn); }
+.chip.off .dot { background: var(--bad); }
+.btn { font: inherit; font-size: 13px; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+       padding: 5px 11px; cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn:focus-visible, .tab:focus-visible, .seg button:focus-visible, summary:focus-visible { outline: 2px solid var(--sleep); outline-offset: 2px; }
+.btn[disabled] { opacity: .45; cursor: default; }
+
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 2px; overflow-x: auto;
+        border-bottom: 1px solid var(--line); margin: 12px 0 14px; scrollbar-width: none; }
+.tab { font: inherit; font-family: var(--display); font-size: 16px; letter-spacing: .02em; color: var(--muted); background: none; border: 0;
+       padding: 9px 12px 8px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--fg); }
+
+.notice { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;
+          display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.notice.safety { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--panel)); }
+.notice.warn { border-color: color-mix(in srgb, var(--warn) 60%, var(--line)); }
+.notice p { margin: 0; flex: 1 1 260px; min-width: 0; }
+
+.rings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 6px 0 16px; }
+.ring { display: grid; justify-items: center; align-content: start; gap: 4px; text-align: center; min-width: 0; }
+.ring svg { width: min(132px, 100%); height: auto; }
+.ring .label { font-family: var(--display); font-size: 16px; }
+.ring .sub { font-size: 12px; color: var(--muted); }
+.ring.muted .arc { stroke: var(--faint) !important; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+#todayCards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+@media (min-width: 461px) and (max-width: 900px) { #todayCards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+.card.stripe { border-left: 3px solid var(--line); }
+.card.stripe.warn { border-left-color: var(--warn); }
+.card.stripe.bad { border-left-color: var(--bad); }
+.card.stripe.ok { border-left-color: var(--ok); }
+.card .big { font-family: var(--display); font-size: 30px; font-weight: 600; line-height: 1.05; }
+.card .row { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.card .kv { display: grid; gap: 1px; }
+.card .kv b { font-family: var(--display); font-size: 20px; font-weight: 600; }
+.card .kv span { font-size: 12px; color: var(--muted); }
+.card p { margin: 6px 0 0; }
+.cardlink { cursor: pointer; }
+.cardlink:hover { border-color: var(--muted); }
+.section { margin-top: 18px; display: grid; gap: 10px; }
+.find { display: grid; gap: 8px; }
+.find .item { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding: 9px 12px; background: var(--panel);
+              border: 1px solid var(--line); border-radius: 10px; }
+.sev { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 1px 7px; border-radius: 999px; align-self: start;
+       border: 1px solid var(--line); color: var(--muted); }
+.sev.alert { color: var(--bad); border-color: var(--bad); }
+.sev.watch { color: var(--warn); border-color: var(--warn); }
+.find .item .t { font-weight: 600; }
+.find .item .d { grid-column: 2; color: var(--muted); }
+details.ev { grid-column: 2; font-size: 12px; color: var(--faint); }
+details.ev summary { cursor: pointer; width: max-content; }
+details.ev ul { margin: 4px 0 0; padding-left: 16px; }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 12px; background: var(--panel); color: var(--muted); border: 0; padding: 4px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--fg); }
+.seg button[disabled] { opacity: .4; cursor: default; }
+.charthead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 10px; }
+.chart { position: relative; min-height: 120px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 12px; }
+.tip { position: absolute; pointer-events: none; background: var(--tip); border: 1px solid var(--line); border-radius: 8px;
+       padding: 4px 8px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.25); white-space: nowrap; z-index: 3; }
+.tip .k { color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+.tablewrap { overflow-x: auto; }
+.fa table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fa th { text-align: left; font-weight: 500; color: var(--muted); border-bottom: 1px solid var(--line); padding: 6px 8px; white-space: nowrap; }
+.fa td { border-bottom: 1px solid var(--line); padding: 6px 8px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fa td.r, .fa th.r { text-align: right; }
+
+.bar { height: 10px; border-radius: 5px; background: var(--track); position: relative; overflow: hidden; }
+.bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; }
+.diverge { display: grid; grid-template-columns: minmax(90px, auto) 1fr auto; gap: 6px 10px; align-items: center; }
+.diverge .axis { position: relative; height: 14px; }
+.diverge .axis::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; border-left: 1px solid var(--line); }
+.diverge .axis i { position: absolute; top: 2px; height: 10px; border-radius: 4px; }
+.track { position: relative; height: 34px; margin: 10px 4px 4px; }
+.track .line { position: absolute; left: 0; right: 0; top: 15px; height: 4px; border-radius: 2px; background: var(--track); }
+.track .fill { position: absolute; left: 0; top: 15px; height: 4px; border-radius: 2px; background: var(--run); }
+.track .pin { position: absolute; top: 9px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; border: 3px solid var(--bg); }
+.track .lab { position: absolute; top: -6px; font-size: 11px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+.daypick { display: inline-flex; align-items: center; gap: 4px; }
+.daypick .btn { padding: 2px 9px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: no-preference) {
+  .ring .arc { transition: stroke-dashoffset .7s cubic-bezier(.2,.7,.2,1); }
+}
+@media (max-width: 460px) {
+  .card .big { font-size: 26px; }
+  .ring .label { font-size: 14px; }
+}
+</style>
+
+<div class="fa" id="app">
+  <div class="top">
+    <h1 class="grow">Fitbit Air</h1>
+    <span class="chip" id="modeChip"><span class="dot"></span><span id="modeText">Connecting…</span></span>
+    <button class="btn" id="refreshBtn" type="button">Refresh</button>
+  </div>
+  <div class="muted" id="freshLine" style="margin-top:4px">Loading your data…</div>
+
+  <nav class="tabs" role="tablist" aria-label="Dashboard pages">
+    <button class="tab" role="tab" id="tab-today" data-tab="today" aria-selected="true">Today</button>
+    <button class="tab" role="tab" id="tab-trends" data-tab="trends" aria-selected="false">Trends</button>
+    <button class="tab" role="tab" id="tab-sleep" data-tab="sleep" aria-selected="false">Sleep</button>
+    <button class="tab" role="tab" id="tab-activity" data-tab="activity" aria-selected="false">Activity</button>
+    <button class="tab" role="tab" id="tab-running" data-tab="running" aria-selected="false">Running</button>
+    <button class="tab" role="tab" id="tab-bodyage" data-tab="bodyage" aria-selected="false">Body age</button>
+  </nav>
+
+  <div id="banner"></div>
+
+  <section id="page-today" data-page="today">
+    <div class="charthead">
+      <h2 id="todayTitle">Today</h2>
+      <span class="daypick" id="dayPick">
+        <button class="btn" type="button" id="dayPrev" aria-label="Previous day">‹</button>
+        <span class="muted num" id="dayLabel">—</span>
+        <button class="btn" type="button" id="dayNext" aria-label="Next day">›</button>
+      </span>
+    </div>
+    <div id="safety"></div>
+    <div class="rings" id="rings">
+      <div class="ring" id="ring-recovery"></div>
+      <div class="ring" id="ring-sleep"></div>
+      <div class="ring" id="ring-age"></div>
+    </div>
+    <div class="grid" id="todayCards"></div>
+    <div class="section">
+      <h3>Findings</h3>
+      <div class="find" id="findings"><div class="muted">—</div></div>
+    </div>
+    <div class="section" id="week">
+      <h3>This week vs the four before</h3>
+      <div class="card"><div class="tablewrap"><table id="weekTable"></table></div>
+        <p class="faint" style="font-size:12px">Average of the last 7 days against the 28 days before them, from your daily values. Fewer days of data make the comparison weaker.</p></div>
+      <div class="card"><h2>Coach targets</h2><div id="targets" class="muted" style="margin-top:6px">—</div></div>
+    </div>
+  </section>
+
+  <section id="page-trends" data-page="trends" hidden>
+    <div class="charthead"><h2>Trends against your baseline</h2>
+      <div class="seg" id="rangeSeg" role="group" aria-label="Range">
+        <button type="button" data-days="7">7 d</button><button type="button" data-days="30" aria-pressed="true">30 d</button>
+        <button type="button" data-days="90">90 d</button><button type="button" data-days="365">365 d</button>
+      </div></div>
+    <p class="muted" style="margin:4px 0 10px">Dashed line: your personal baseline, once enough days exist. Hover a line for the day's value.</p>
+    <div class="grid" id="trendGrid"></div>
+  </section>
+
+  <section id="page-sleep" data-page="sleep" hidden>
+    <h2>Sleep, last 14 nights</h2>
+    <div class="grid" style="margin-top:10px">
+      <div class="card" style="grid-column:1/-1"><div class="charthead"><h3>Nights by stage</h3>
+        <div class="legend"><span><i style="background:var(--sleep)"></i>Deep</span><span><i style="background:color-mix(in srgb,var(--sleep) 60%,var(--panel))"></i>REM</span><span><i style="background:color-mix(in srgb,var(--sleep) 30%,var(--panel))"></i>Light</span><span><i style="background:var(--faint)"></i>Awake</span></div></div>
+        <div class="chart" id="stageChart"></div></div>
+      <div class="card"><h3>Sleep score</h3><div class="chart" id="sleepScoreChart"></div></div>
+      <div class="card"><h3>Sleep debt (7 nights)</h3><div class="chart" id="debtChart"></div></div>
+      <div class="card"><h3>Regularity (SRI)</h3><div id="sriBox"></div></div>
+    </div>
+  </section>
+
+  <section id="page-activity" data-page="activity" hidden>
+    <h2>Activity &amp; weight</h2>
+    <div class="grid" style="margin-top:10px" id="actGrid"></div>
+    <div class="card" style="margin-top:10px"><h3>Workouts, last 30 days</h3><div class="tablewrap"><table id="sessTable"></table></div></div>
+  </section>
+
+  <section id="page-running" data-page="running" hidden>
+    <h2>Running &amp; race</h2>
+    <div class="grid" style="margin-top:10px">
+      <div class="card stripe" id="planCard" style="grid-column:1/-1"></div>
+    </div>
+    <div class="card" style="margin-top:10px"><h3>Runs, last 90 days</h3><div class="tablewrap"><table id="runTable"></table></div>
+      <p class="faint" style="font-size:12px" id="runNote"></p></div>
+  </section>
+
+  <section id="page-bodyage" data-page="bodyage" hidden>
+    <h2>Body age</h2>
+    <div class="grid" style="margin-top:10px">
+      <div class="card" id="ageHead"></div>
+      <div class="card"><h3>What moves it most</h3><div id="ageLevers" style="margin-top:6px">—</div></div>
+      <div class="card" style="grid-column:1/-1"><div class="charthead"><h3>Components (years older or younger)</h3></div>
+        <div class="diverge" id="ageComps" style="margin-top:8px"></div></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const SERVER = "host:fitbit-coach";
+  const $cfg = () => document.getElementById("fa-config").textContent;
+  // Layout config embedded by `fitbit-air dashboard build`. The builder validates it, but the page does not trust
+  // that: anything missing, mistyped or unknown falls back to the defaults.
+  // fa:cfg-start
+  const ALL_TABS = ["today", "trends", "sleep", "activity", "running", "bodyage"];
+  const DEFAULT_TREND = ["rhr", "hrv_7d", "sleep_debt_h", "steps_7d", "mvpa_week", "sedentary_h", "weight_trend_kg",
+                         "score:recovery", "score:sleep"];
+  const strs = (v) => Array.isArray(v) ? v.filter((x) => typeof x === "string") : null;
+  const isObj = (v) => v && typeof v === "object" && !Array.isArray(v);
+  const faConfig = (raw) => {
+    const r = isObj(raw) ? raw : {};
+    const tabs = (strs(r.tabs) || []).filter((t, i, a) => ALL_TABS.includes(t) && a.indexOf(t) === i);
+    const trend = strs(r.trend_metrics);
+    const pluginMeta = {};
+    if (isObj(r.plugin_meta)) {
+      Object.keys(r.plugin_meta).forEach((k) => {
+        const m = isObj(r.plugin_meta[k]) ? r.plugin_meta[k] : {};
+        pluginMeta[k] = {unit: typeof m.unit === "string" ? m.unit : "", desc: typeof m.description === "string" ? m.description : ""};
+      });
+    }
+    return {tabs: tabs.length ? tabs : ALL_TABS.slice(), cards: strs(r.today_cards),
+            trend: trend && trend.length ? trend : DEFAULT_TREND.slice(),
+            range: [7, 30, 90, 365].includes(r.default_range_days) ? r.default_range_days : 30, pluginMeta: pluginMeta};
+  };
+  // fa:cfg-end
+  const CFG = (() => { try { return faConfig(JSON.parse($cfg())); } catch (e) { return faConfig({}); } })();
+  const TABS = CFG.tabs, TREND_METRICS = CFG.trend, TODAY_CARDS = CFG.cards, RANGE0 = CFG.range;
+  const METRIC = {
+    "rhr": {label: "Resting HR", unit: "bpm", dp: 0, color: "--bad"},
+    "hrv_7d": {label: "HRV (7-day)", unit: "ms", dp: 0, color: "--recovery"},
+    "sleep_debt_h": {label: "Sleep debt", unit: "h", dp: 1, color: "--sleep"},
+    "steps_7d": {label: "Steps (7-day avg)", unit: "/day", dp: 0, color: "--recovery", ref: 7000, refLabel: "7,000"},
+    "mvpa_week": {label: "Brisk minutes", unit: "min/wk", dp: 0, color: "--recovery", band: [150, 300], refLabel: "WHO 150–300"},
+    "sedentary_h": {label: "Sedentary", unit: "h/day", dp: 1, color: "--warn", ref: 9.5, refLabel: "risk rises past ~9–10 h"},
+    "weight_trend_kg": {label: "Weight trend", unit: "kg", dp: 1, color: "--age"},
+    "score:recovery": {label: "Recovery score", unit: "", dp: 0, color: "--recovery"},
+    "score:sleep": {label: "Sleep score", unit: "", dp: 0, color: "--sleep"},
+  };
+  const NO_RACE_HELP = "Ask the coach to set your race (race_date and race_distance_km), or run `fitbit-air profile set race_date YYYY-MM-DD`.";
+  const noRaceLines = (pc) => [NO_RACE_HELP].concat(pc && pc.reason && pc.reason !== "no race configured" ? [pc.reason] : []);
+  const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  const metricMeta = (k) => {
+    if (own(METRIC, k)) return METRIC[k];
+    const name = k.replace(/^plugin:/, ""), pm = own(CFG.pluginMeta, name) ? CFG.pluginMeta[name] : {};
+    return {label: name, unit: pm.unit || "", dp: 1, color: "--run", desc: pm.desc || ""};
+  };
+  const COMP = {vo2: "VO2 max", rhr: "Resting HR", steps: "Steps", mvpa: "Brisk minutes", strength: "Strength",
+                sleep_min: "Sleep", sri: "Sleep regularity", bmi: "BMI"};
+  const LEVER = {steps_7000: "7,000 steps a day", rhr_minus_10: "Resting HR 10 bpm lower", rhr_to_floor: "Resting HR down to 60",
+                 mvpa_150: "150 brisk minutes a week", bmi_minus_2: "BMI 2 points lower", vo2_plus_3_5: "VO2 max +3.5"};
+
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#888";
+  const fmt = (v, dp = 0) => v == null || Number.isNaN(v) ? "—" : Number(v).toLocaleString("en", {minimumFractionDigits: dp, maximumFractionDigits: dp});
+  const pct = (v) => v == null ? "—" : Math.round(v * 100) + "%";
+  const dayFmt = (d) => { const t = new Date(d + "T12:00:00"); return t.toLocaleDateString("en", {weekday: "short", day: "numeric", month: "short"}); };
+  const shortDay = (d) => { const t = new Date(d + "T12:00:00"); return t.toLocaleDateString("en", {day: "numeric", month: "short"}); };
+  const isoAdd = (d, n) => { const t = new Date(d + "T12:00:00"); t.setDate(t.getDate() + n); return t.toISOString().slice(0, 10); };
+  const todayIso = () => { const t = new Date(); return new Date(t.getTime() - t.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  const ago = (iso) => {
+    if (!iso) return "never";
+    const h = (Date.now() - new Date(iso).getTime()) / 3600000;
+    if (h < 1) return Math.max(1, Math.round(h * 60)) + " min ago";
+    if (h < 48) return Math.round(h) + " h ago";
+    return Math.round(h / 24) + " days ago";
+  };
+
+  const state = {
+    mcp: null, db: null, perms: null,
+    mode: "connecting",     // live | snapshot | none
+    hostError: null,         // McpError code when live is unavailable
+    live: {}, liveErr: {},   // per section payload / error
+    snap: null,
+    tab: "today", day: null, range: RANGE0,
+  };
+
+  // ---------- data ----------
+  const SOURCES = () => ({
+    status: ["data_status", {}],
+    overview: ["get_overview", state.day ? {date: state.day} : {}],
+    trends: ["get_trends", {metrics: TREND_METRICS, days: state.range}],
+    sleep: ["get_sleep", {days: 14}],
+    activity: ["get_activity", {days: 30}],
+    running: ["get_running", {days: 90}],
+    bodyage: ["get_body_age", {}],
+    targets: ["get_coach_notes", {status: "active"}],
+  });
+  const SNAPKEY = {status: "status", overview: "overview", sleep: "sleep14", activity: "activity30", running: "running90",
+                   bodyage: "bodyage", targets: "targets"};
+
+  function section(name) {
+    // live payload when it loaded; otherwise the snapshot's matching section (only for today / its ranges)
+    const live = state.live[name];
+    if (live && !live.error) return {data: live, from: "live"};
+    if (state.snap) {
+      let key = SNAPKEY[name];
+      if (name === "trends") key = state.range === 90 ? "trends90" : "trends30";  // the snapshot holds 30 and 90 days
+      if (name === "overview" && state.day && state.day !== state.snap.as_of) key = null;
+      const s = key ? state.snap[key] : null;
+      if (s && !s.error) return {data: s, from: "snapshot"};
+      if (s && s.error) return {error: s.error, hint: s.hint, from: "snapshot"};
+    }
+    if (live && live.error) return {error: live.error, hint: live.hint, from: "live"};
+    const e = state.liveErr[name];
+    return {error: e ? null : null, pending: !e && state.mode === "connecting"};
+  }
+
+  async function callOne(name, refresh) {
+    const [tool, args] = SOURCES()[name];
+    try {
+      const r = await state.mcp.callTool(SERVER, tool, args, {cache: refresh ? {refresh: true} : {staleTime: 60000}});
+      state.live[name] = r.payload;
+      delete state.liveErr[name];
+      return null;
+    } catch (e) {
+      state.liveErr[name] = e && e.code || "upstream_error";
+      return state.liveErr[name];
+    }
+  }
+
+  async function loadLive(names, refresh) {
+    if (!state.mcp) { state.mode = state.snap ? "snapshot" : "none"; return; }
+    const codes = await Promise.all(names.map((n) => callOne(n, refresh)));
+    const failed = codes.filter(Boolean);
+    if (failed.length === names.length) {
+      state.hostError = failed[0];
+      state.mode = state.snap ? "snapshot" : "none";
+    } else {
+      state.hostError = null;
+      state.mode = "live";
+    }
+  }
+
+  async function loadSnapshot() {
+    if (!state.db) return;
+    try {
+      const doc = await state.db.doc("snapshot/latest").get();
+      state.snap = doc.exists ? doc.data() : null;
+    } catch (e) { state.snap = null; }
+  }
+
+  async function boot() {
+    render();
+    const w = window.claude;
+    if (!w || typeof w.use !== "function") { state.mode = "none"; state.hostError = "no_runtime"; render(); return; }
+    const [mcp, db, perms] = await Promise.all([w.use("mcp").catch(() => null), w.use("db").catch(() => null),
+                                                w.use("permissions").catch(() => null)]);
+    state.mcp = mcp; state.db = db; state.perms = perms;
+    await loadSnapshot();
+    if (state.snap && state.mode === "connecting") render();
+    await loadLive(Object.keys(SOURCES()), false);
+    render();
+  }
+
+  // ---------- header / banner ----------
+  const HOST_MSG = {
+    server_not_connected: "Live data needs Claude Desktop on your Mac with the fitbit-coach server running.",
+    no_runtime: "Open this dashboard in Claude to see your data.",
+    not_in_manifest: "fitbit-coach isn't allowed for this page yet.",
+    approval_required: "fitbit-coach needs your approval to share live data with this page.",
+    cancelled: "The live data request was declined.",
+    server_unavailable: "fitbit-coach didn't answer just now.",
+    not_granted: "Live data isn't available in this view.",
+    capability_disabled: "Live data isn't available in this view.",
+  };
+
+  function renderHeader() {
+    const chip = $("modeChip"), text = $("modeText");
+    chip.className = "chip " + (state.mode === "live" ? "live" : state.mode === "snapshot" ? "snap" : state.mode === "none" ? "off" : "");
+    const snapAt = state.snap && state.snap.generated_at;
+    text.textContent = state.mode === "live" ? "Live from your Mac"
+      : state.mode === "snapshot" ? "Snapshot · " + (snapAt ? new Date(snapAt).toLocaleString("en", {weekday: "short", hour: "numeric", minute: "2-digit"}) : "")
+      : state.mode === "none" ? "No data" : "Connecting…";
+    const st = section("status");
+    const fr = st.data && st.data.freshness;
+    const line = $("freshLine");
+    if (fr) {
+      line.textContent = (fr.last_sync_finished_utc ? "Last sync " + ago(fr.last_sync_finished_utc) : "No sync has finished yet") +
+        (fr.stale ? " · data may be out of date" : " · data fresh") + (st.from === "snapshot" ? " (as of the snapshot)" : "");
+      if (st.data.overrides && Object.keys(st.data.overrides).length) line.textContent += " · personal thresholds active";
+      line.style.color = fr.stale ? "var(--warn)" : "";
+    } else {
+      line.textContent = state.mode === "connecting" ? "Loading your data…" : "";
+    }
+    const b = $("banner"); b.replaceChildren();
+    if (state.mode !== "live" && state.mode !== "connecting") {
+      const n = el("div", "notice warn");
+      const msg = HOST_MSG[state.hostError] || "Live data couldn't be loaded.";
+      n.append(el("p", null, msg + (state.snap ? " Showing the daily snapshot instead." : " No snapshot is stored yet.")));
+      if (state.hostError === "approval_required" || state.hostError === "not_in_manifest") {
+        const btn = el("button", "btn", "Allow live data");
+        btn.type = "button";
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          if (state.perms && state.hostError === "not_in_manifest") {
+            try { await state.perms.request(["mcp:" + SERVER]); } catch (e) { /* a no is final for this load */ }
+          }
+          await loadLive(Object.keys(SOURCES()), true); render();
+        });
+        n.append(btn);
+      }
+      b.append(n);
+    }
+    $("refreshBtn").disabled = !state.mcp;
+  }
+
+  // ---------- small svg kit ----------
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+
+  function ring(host, {value, max = 100, color, center, label, sub, muted}) {
+    host.replaceChildren();
+    host.classList.toggle("muted", !!muted);
+    const s = svg("svg", {viewBox: "0 0 120 120", role: "img", "aria-label": label + " " + center});
+    const r = 50, c = 2 * Math.PI * r;
+    s.append(svg("circle", {cx: 60, cy: 60, r, fill: "none", stroke: css("--track"), "stroke-width": 10}));
+    const f = value == null ? 0 : Math.max(0, Math.min(1, value / max));
+    const arc = svg("circle", {class: "arc", cx: 60, cy: 60, r, fill: "none", stroke: css(color), "stroke-width": 10, "stroke-linecap": "round",
+                               "stroke-dasharray": c, "stroke-dashoffset": c * (1 - f), transform: "rotate(-90 60 60)"});
+    s.append(arc);
+    const t = svg("text", {x: 60, y: center.length > 4 ? 66 : 70, "text-anchor": "middle", fill: css("--fg"),
+                           "font-family": "Saira Condensed, Arial Narrow, sans-serif", "font-weight": 600, "font-size": center.length > 4 ? 18 : 34});
+    t.textContent = center;
+    s.append(t);
+    host.append(s, el("div", "label", label), el("div", "sub", sub || ""));
+  }
+
+  function lineChart(host, rows, {color, ref, band, dp = 0, unit = "", yLabel}) {
+    host.replaceChildren();
+    const pts = rows.filter((r) => r.value != null).map((r) => ({d: r.date, v: Number(r.value), b: r.baseline == null ? null : Number(r.baseline)}));
+    if (!pts.length) { host.append(el("div", "empty", "No values in this range yet")); return; }
+    const W = Math.max(260, host.clientWidth || 320), H = 150, m = {l: 40, r: 12, t: 10, b: 22};
+    const xs = pts.map((p) => new Date(p.d + "T12:00:00").getTime());
+    let lo = Math.min(...pts.map((p) => p.v), ...pts.filter((p) => p.b != null).map((p) => p.b));
+    let hi = Math.max(...pts.map((p) => p.v), ...pts.filter((p) => p.b != null).map((p) => p.b));
+    if (ref != null) { lo = Math.min(lo, ref); hi = Math.max(hi, ref); }
+    if (band) { lo = Math.min(lo, band[0]); hi = Math.max(hi, band[1]); }
+    if (hi === lo) { hi += 1; lo -= 1; }
+    const pad = (hi - lo) * .12; lo -= pad; hi += pad;
+    const x0 = Math.min(...xs), x1 = Math.max(...xs) === x0 ? x0 + 86400000 : Math.max(...xs);
+    const X = (t) => m.l + (t - x0) / (x1 - x0) * (W - m.l - m.r);
+    const Y = (v) => H - m.b - (v - lo) / (hi - lo) * (H - m.t - m.b);
+    const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, width: "100%"});
+    const ticks = [lo + pad, (lo + hi) / 2, hi - pad];
+    for (const tv of ticks) {
+      s.append(svg("line", {x1: m.l, x2: W - m.r, y1: Y(tv), y2: Y(tv), stroke: css("--line"), "stroke-width": 1}));
+      const tl = svg("text", {x: m.l - 6, y: Y(tv) + 4, "text-anchor": "end", fill: css("--muted"), "font-size": 11, "font-family": "IBM Plex Sans, sans-serif"});
+      tl.textContent = fmt(tv, Math.abs(hi - lo) < 10 ? Math.max(dp, 1) : 0); s.append(tl);
+    }
+    if (band) s.append(svg("rect", {x: m.l, width: W - m.l - m.r, y: Y(band[1]), height: Math.max(0, Y(band[0]) - Y(band[1])),
+                                    fill: css("--ok"), opacity: .1}));
+    if (ref != null) s.append(svg("line", {x1: m.l, x2: W - m.r, y1: Y(ref), y2: Y(ref), stroke: css("--muted"), "stroke-width": 1, "stroke-dasharray": "2 4"}));
+    const bpts = pts.filter((p) => p.b != null);
+    if (bpts.length > 1) s.append(svg("polyline", {fill: "none", stroke: css("--muted"), "stroke-width": 1.5, "stroke-dasharray": "5 4",
+      points: bpts.map((p) => `${X(new Date(p.d + "T12:00:00").getTime())},${Y(p.b)}`).join(" ")}));
+    const col = css(color);
+    if (pts.length > 1) s.append(svg("polyline", {fill: "none", stroke: col, "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round",
+      points: pts.map((p, i) => `${X(xs[i])},${Y(p.v)}`).join(" ")}));
+    pts.forEach((p, i) => s.append(svg("circle", {cx: X(xs[i]), cy: Y(p.v), r: i === pts.length - 1 ? 3.5 : 2, fill: col})));
+    const lab = (t, x, anchor) => { const e = svg("text", {x, y: H - 5, "text-anchor": anchor, fill: css("--muted"), "font-size": 11, "font-family": "IBM Plex Sans, sans-serif"}); e.textContent = t; s.append(e); };
+    lab(shortDay(pts[0].d), m.l, "start"); if (pts.length > 1) lab(shortDay(pts[pts.length - 1].d), W - m.r, "end");
+    const hover = svg("line", {y1: m.t, y2: H - m.b, stroke: css("--faint"), "stroke-width": 1, visibility: "hidden"});
+    s.append(hover);
+    const tip = el("div", "tip"); tip.hidden = true;
+    s.addEventListener("pointermove", (ev) => {
+      const box = s.getBoundingClientRect(); const px = (ev.clientX - box.left) / box.width * W;
+      let best = 0; xs.forEach((t, i) => { if (Math.abs(X(t) - px) < Math.abs(X(xs[best]) - px)) best = i; });
+      const p = pts[best]; hover.setAttribute("x1", X(xs[best])); hover.setAttribute("x2", X(xs[best])); hover.setAttribute("visibility", "visible");
+      tip.replaceChildren(el("span", "k", shortDay(p.d) + "  "), document.createTextNode(fmt(p.v, dp) + (unit ? " " + unit : "")),
+        ...(p.b != null ? [el("span", "k", "  · baseline " + fmt(p.b, dp))] : []));
+      tip.hidden = false;
+      const left = X(xs[best]) / W * box.width; tip.style.left = Math.min(Math.max(0, left - 60), box.width - 150) + "px"; tip.style.top = "0px";
+    });
+    s.addEventListener("pointerleave", () => { tip.hidden = true; hover.setAttribute("visibility", "hidden"); });
+    host.append(s, tip);
+  }
+
+  function errorBox(host, sec, what) {
+    host.replaceChildren(el("div", "muted", sec.pending ? "Loading…" :
+      sec.error ? (sec.error + (sec.hint ? " — " + sec.hint : "")) : `No ${what} available (${HOST_MSG[state.hostError] || "live data and the snapshot are both missing"}).`));
+  }
+
+  function evidence(ids) {
+    const d = el("details", "ev");
+    d.append(el("summary", null, "Evidence (" + ids.length + ")"));
+    const ul = el("ul");
+    ids.forEach((id) => ul.append(el("li", "mono", id)));
+    d.append(ul);
+    d.addEventListener("toggle", async () => {
+      if (!d.open || d.dataset.loaded || state.mode !== "live") return;
+      d.dataset.loaded = "1";
+      try {
+        const r = await state.mcp.callTool(SERVER, "get_evidence", {ids}, {cache: {staleTime: 300000}});
+        const src = (r.payload && r.payload.sources) || {};
+        ul.replaceChildren(...ids.map((id) => { const li = el("li"); li.append(el("span", "mono", id + " "), document.createTextNode(src[id] ? src[id].citation : "")); return li; }));
+      } catch (e) { /* keep the ids */ }
+    });
+    return d;
+  }
+
+  // ---------- pages ----------
+  function renderToday() {
+    const ov = section("overview");
+    const day = (ov.data && ov.data.date) || state.day || todayIso();
+    $("dayLabel").textContent = dayFmt(day) + (ov.from === "snapshot" ? " · snapshot" : "");
+    $("todayTitle").textContent = day === todayIso() ? "Today" : dayFmt(day);
+    $("dayNext").disabled = !state.day || state.day >= todayIso() || state.mode !== "live";
+    $("dayPrev").disabled = state.mode !== "live";
+    const safety = $("safety"); safety.replaceChildren();
+    const rings = ["ring-recovery", "ring-sleep", "ring-age"].map($);
+    if (!ov.data) {
+      rings.forEach((r) => r.replaceChildren(el("div", "muted", "—")));
+      errorBox($("findings"), ov, "findings"); $("todayCards").replaceChildren(); renderWeek(); return;
+    }
+    const o = ov.data;
+    (o.safety || []).forEach((s) => {
+      const n = el("div", "notice safety");
+      n.append(el("p", null, "")); n.firstChild.append(el("b", null, s.title + ". "), document.createTextNode(s.detail + " If it persists or you have symptoms (chest pain, breathlessness, fainting, fever), contact a doctor."));
+      safety.append(n);
+    });
+    const sc = Object.fromEntries((o.scores || []).map((s) => [s.score, s]));
+    const weak = (s) => !s || s.value == null || s.status !== "ok" || (s.confidence != null && s.confidence < .5);
+    const rec = sc.recovery;
+    ring(rings[0], {value: rec && rec.value, color: "--recovery", label: "Recovery",
+      center: rec && rec.value != null ? fmt(rec.value) : "building",
+      sub: rec ? (rec.value != null ? "confidence " + pct(rec.confidence) : (rec.reason || rec.status).replace(/_/g, " ")) : "—", muted: weak(rec)});
+    const sl = sc.sleep;
+    ring(rings[1], {value: sl && sl.value, color: "--sleep", label: "Sleep", center: sl && sl.value != null ? fmt(sl.value) : "—",
+      sub: sl ? (sl.value != null ? "confidence " + pct(sl.confidence) : (sl.reason || sl.status).replace(/_/g, " ")) : "—", muted: weak(sl)});
+    const ba = sc.body_age, bac = (ba && ba.components) || {};
+    const age = bac.age, bav = ba && ba.value;
+    ring(rings[2], {value: bav != null && age ? 20 + (age - bav) : null, max: 40, color: bav != null && age && bav <= age ? "--ok" : "--age",
+      label: "Body age", center: bav != null ? fmt(bav) : "—",
+      sub: ba ? (bav != null ? (bac.display || "").replace(/^\S+\s*/, "") + (age ? " · you're " + age : "") + (ba.status === "provisional" ? " · provisional" : "") : (ba.reason || ba.status).replace(/_/g, " ")) : "—",
+      muted: ba && ba.status !== "ok"});
+
+    const m = o.metrics || {};
+    const cards = $("todayCards"); cards.replaceChildren();
+    const card = (key, cls, tab, title, big, lines) => {
+      if (TODAY_CARDS && !TODAY_CARDS.includes(key)) return;
+      const linked = TABS.includes(tab);  // a card whose tab is hidden is plain text, not a link
+      const c = el("div", "card stripe " + (linked ? "cardlink " : "") + (cls || ""));
+      if (linked) { c.tabIndex = 0; c.setAttribute("role", "link"); }
+      c.append(el("h3", null, title)); if (big != null) c.append(el("div", "big num", big));
+      lines.forEach((l) => c.append(el("p", "muted", l)));
+      if (linked) {
+        const go = () => selectTab(tab); c.addEventListener("click", go); c.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+      }
+      cards.append(c);
+    };
+    const rn = section("running"), plan = rn.data && rn.data.plan, pc = plan && plan.components;
+    if (pc && pc.status === "no_race") {
+      card("plan", "", "running", "Race plan", "No race configured", noRaceLines(pc));
+    } else if (pc) {
+      const st = pc.status || plan.status;
+      card("plan", st === "on_track" ? "ok" : st === "tight" ? "warn" : "bad", "running", (pc.race_km || 10) + " km plan", st.replace(/_/g, " "),
+        [pc.weeks_short ? "About " + pc.weeks_short + " weeks short of a gradual build" : pc.weeks_left != null ? pc.weeks_left + " weeks to race day" : "",
+         pc.safe_by_race_km != null ? "Safe by race day: " + fmt(pc.safe_by_race_km, 1) + " km" : ""].filter(Boolean));
+    }
+    if (m.sleep_debt_h != null) card("sleep_debt", m.sleep_debt_h >= 5 ? "warn" : "ok", "sleep", "Sleep debt", fmt(m.sleep_debt_h, 1) + " h", ["Over the last 7 nights"]);
+    card("activity", "", "activity", "Activity", m.steps_7d != null ? fmt(m.steps_7d) : "—",
+      ["steps a day (7-day)", (m.mvpa_week != null ? fmt(m.mvpa_week) + " brisk min/week" : "") + (m.sedentary_h != null ? " · sedentary " + fmt(m.sedentary_h, 1) + " h/day" : "")]);
+    card("body", "", "bodyage", "Body", m.rhr != null ? fmt(m.rhr) + " bpm" : "—",
+      ["resting HR", (m.weight_trend_kg != null ? fmt(m.weight_trend_kg, 1) + " kg" : "no recent weigh-in") + (m.bmi != null ? " · BMI " + fmt(m.bmi, 1) : "")]);
+
+    const f = $("findings"); f.replaceChildren();
+    const ins = (o.insights || []).filter((i) => i.kind !== "safety");
+    if (!ins.length) f.append(el("div", "muted", "No findings for this day."));
+    ins.forEach((i) => {
+      const it = el("div", "item");
+      it.append(el("span", "sev " + i.severity, i.severity), el("span", "t", i.title), el("span", "d", i.detail));
+      if (i.evidence_ids && i.evidence_ids.length) it.append(evidence(i.evidence_ids));
+      f.append(it);
+    });
+    renderWeek();
+  }
+
+  function renderWeek() {
+    const t = $("weekTable"); t.replaceChildren();
+    const tr = section("trends");
+    const series = tr.data && tr.data.series;
+    const head = el("tr"); ["Metric", "Last 7 d", "28 d before", "Change"].forEach((h, i) => head.append(el("th", i ? "r" : null, h)));
+    t.append(head);
+    if (!series) { const r = el("tr"); const c = el("td", "muted", "Trends not loaded yet"); c.colSpan = 4; r.append(c); t.append(r); }
+    else {
+      const end = tr.data.end, cut = isoAdd(end, -6), cut2 = isoAdd(end, -34);
+      const avg = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+      for (const k of TREND_METRICS) {
+        const rows = (series[k] || []).filter((r) => r.value != null);
+        const a = avg(rows.filter((r) => r.date >= cut).map((r) => r.value));
+        const b = avg(rows.filter((r) => r.date < cut && r.date >= cut2).map((r) => r.value));
+        if (a == null) continue;
+        const meta = metricMeta(k), r = el("tr");
+        r.append(el("td", null, meta.label), el("td", "r", fmt(a, meta.dp) + (meta.unit ? " " + meta.unit : "")),
+                 el("td", "r muted", b == null ? "—" : fmt(b, meta.dp)), el("td", "r", b == null ? "—" : (a - b >= 0 ? "+" : "") + fmt(a - b, meta.dp)));
+        t.append(r);
+      }
+      if (state.range < 30 && state.mode === "live") {
+        const r = el("tr"); const c = el("td", "faint", "Pick 30 d or more on Trends for the full 28-day comparison."); c.colSpan = 4; r.append(c); t.append(r);
+      }
+    }
+    const tg = $("targets"); tg.replaceChildren();
+    const ts = section("targets");
+    const notes = ts.data && ts.data.notes;
+    if (!notes) tg.append(el("span", null, ts.pending ? "Loading…" : "Not available"));
+    else if (!notes.length) tg.append(el("span", null, "No active targets. Ask the coach for a weekly review to set some."));
+    else notes.forEach((n) => { const p = el("p"); p.append(el("span", "sev", n.kind), document.createTextNode(" " + n.text + (n.review_on ? " · review " + shortDay(n.review_on) : ""))); tg.append(p); });
+  }
+
+  function renderTrends() {
+    const seg = $("rangeSeg"), tr = section("trends");
+    const shown = tr.from === "snapshot" ? (state.range === 90 ? 90 : 30) : state.range;  // what the data covers
+    seg.querySelectorAll("button").forEach((b) => {
+      const d = Number(b.dataset.days);
+      b.setAttribute("aria-pressed", String(d === shown));
+      b.disabled = state.mode !== "live" && d !== 30 && d !== 90;
+    });
+    const g = $("trendGrid"); g.replaceChildren();
+    if (!tr.data) { errorBox(g, tr, "trends"); return; }
+    for (const k of TREND_METRICS) {
+      const meta = metricMeta(k), c = el("div", "card");
+      const rows = tr.data.series[k] || [];
+      const last = [...rows].reverse().find((r) => r.value != null);
+      const head = el("div", "charthead"); head.append(el("h3", null, meta.label),
+        el("span", "num", last ? fmt(last.value, meta.dp) + (meta.unit ? " " + meta.unit : "") : "—"));
+      const ch = el("div", "chart"); c.append(head, ch);
+      if (meta.refLabel) c.append(el("p", "faint", "Reference: " + meta.refLabel));
+      if (meta.desc) c.append(el("p", "faint", meta.desc));
+      g.append(c);
+      requestAnimationFrame(() => lineChart(ch, rows, {color: meta.color, ref: meta.ref, band: meta.band, dp: meta.dp, unit: meta.unit}));
+    }
+  }
+
+  function renderSleep() {
+    const sec = section("sleep");
+    const stage = $("stageChart"), score = $("sleepScoreChart"), debt = $("debtChart"), sri = $("sriBox");
+    if (!sec.data) { [stage, score, debt, sri].forEach((h) => errorBox(h, sec, "sleep data")); return; }
+    const nights = sec.data.nights || [];
+    stage.replaceChildren();
+    if (!nights.length) stage.append(el("div", "empty", "No nights in this range"));
+    else {
+      const W = Math.max(280, stage.clientWidth || 600), H = 190, m = {l: 34, r: 8, t: 8, b: 24};
+      const tot = (n) => (n.deep_min || 0) + (n.rem_min || 0) + (n.light_min || 0) + (n.awake_min || 0);
+      const maxH = Math.max(8, ...nights.map((n) => tot(n) / 60));
+      const bw = Math.min(32, (W - m.l - m.r) / nights.length * .7), step = (W - m.l - m.r) / nights.length;
+      const Y = (h) => H - m.b - h / maxH * (H - m.t - m.b);
+      const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, width: "100%"});
+      [0, 4, 8].filter((h) => h <= maxH).forEach((h) => {
+        s.append(svg("line", {x1: m.l, x2: W - m.r, y1: Y(h), y2: Y(h), stroke: css("--line")}));
+        const t = svg("text", {x: m.l - 6, y: Y(h) + 4, "text-anchor": "end", "font-size": 11, fill: css("--muted"), "font-family": "IBM Plex Sans, sans-serif"}); t.textContent = h + " h"; s.append(t);
+      });
+      const base = css("--sleep"), pnl = css("--panel");
+      const mix = (p) => `color-mix(in srgb, ${base} ${p}%, ${pnl})`;
+      const tip = el("div", "tip"); tip.hidden = true;
+      nights.forEach((n, i) => {
+        const x = m.l + i * step + (step - bw) / 2;
+        let y0 = 0;
+        [["deep_min", base], ["rem_min", mix(60)], ["light_min", mix(30)], ["awake_min", css("--faint")]].forEach(([k, col]) => {
+          const h = (n[k] || 0) / 60; if (!h) return;
+          const r = svg("rect", {x, width: bw, y: Y(y0 + h), height: Math.max(0, Y(y0) - Y(y0 + h)), rx: 3});
+          r.style.fill = col; if (n.nap) r.setAttribute("opacity", ".55"); s.append(r); y0 += h;
+        });
+        const hit = svg("rect", {x: m.l + i * step, width: step, y: m.t, height: H - m.t - m.b, fill: "transparent"});
+        hit.addEventListener("pointerenter", () => {
+          tip.replaceChildren(el("span", "k", shortDay(n.wake_date) + (n.nap ? " nap  " : "  ")),
+            document.createTextNode(fmt((n.asleep_min || 0) / 60, 1) + " h asleep · deep " + fmt(n.deep_min) + " · REM " + fmt(n.rem_min) + " min"));
+          tip.hidden = false; const box = s.getBoundingClientRect();
+          tip.style.left = Math.min(Math.max(0, (x / W) * box.width - 80), box.width - 240) + "px"; tip.style.top = "0px";
+        });
+        hit.addEventListener("pointerleave", () => { tip.hidden = true; });
+        s.append(hit);
+        if (i === 0 || i === nights.length - 1 || nights.length <= 8) {
+          const t = svg("text", {x: x + bw / 2, y: H - 6, "text-anchor": "middle", "font-size": 10, fill: css("--muted"), "font-family": "IBM Plex Sans, sans-serif"});
+          t.textContent = shortDay(n.wake_date); s.append(t);
+        }
+      });
+      stage.append(s, tip);
+    }
+    lineChart(score, (sec.data.scores || []).map((r) => ({date: r.date, value: r.value})), {color: "--sleep", dp: 0});
+    lineChart(debt, Object.entries(sec.data.debt_h || {}).map(([d, v]) => ({date: d, value: v})), {color: "--warn", dp: 1, unit: "h"});
+    sri.replaceChildren();
+    const sv = Object.entries(sec.data.sri || {});
+    if (!sv.length) sri.append(el("p", "muted", "Not enough consecutive nights yet. Regularity needs about a week of nightly wear."));
+    else {
+      const [d, v] = sv[sv.length - 1];
+      sri.append(el("div", "big num", fmt(v)), el("p", "muted", "on " + shortDay(d) + " · −100 to 100, 100 = identical sleep and wake times every day"));
+    }
+  }
+
+  function renderActivity() {
+    const g = $("actGrid"); g.replaceChildren();
+    const tr = state.mode === "live" ? section("trends") : (state.snap ? {data: state.snap.trends30} : {});
+    const series = tr.data && tr.data.series;
+    const act = section("activity");
+    if (!series && !act.data) { errorBox(g, act, "activity data"); return; }
+    for (const k of ["steps_7d", "mvpa_week", "sedentary_h", "weight_trend_kg"]) {
+      const meta = metricMeta(k), c = el("div", "card");
+      const rows = (series && series[k]) || [];
+      const last = [...rows].reverse().find((r) => r.value != null);
+      const head = el("div", "charthead"); head.append(el("h3", null, meta.label), el("span", "num", last ? fmt(last.value, meta.dp) + " " + meta.unit : "—"));
+      const ch = el("div", "chart"); c.append(head, ch);
+      if (meta.refLabel) c.append(el("p", "faint", "Reference: " + meta.refLabel));
+      if (k === "weight_trend_kg" && act.data) {
+        const w = act.data.weigh_ins || [];
+        c.append(el("p", "muted", w.length ? w.length + " weigh-in" + (w.length > 1 ? "s" : "") + " in 30 days, last " + shortDay(w[w.length - 1].date) + ": " + fmt(w[w.length - 1].kg, 1) + " kg"
+                                            : "No weigh-ins in 30 days. A trend needs about 3 in 14 days."));
+      }
+      g.append(c);
+      requestAnimationFrame(() => lineChart(ch, rows, {color: meta.color, ref: meta.ref, band: meta.band, dp: meta.dp, unit: meta.unit}));
+    }
+    const ov = section("overview"), m = (ov.data && ov.data.metrics) || {};
+    if (m.strength_days_week != null || m.azm_week != null) {
+      const c = el("div", "card"); c.append(el("h3", null, "Also this week"));
+      const row = el("div", "row"); row.style.marginTop = "6px";
+      const kv = (b, s) => { const d = el("div", "kv"); d.append(el("b", "num", b), el("span", null, s)); row.append(d); };
+      if (m.strength_days_week != null) kv(fmt(m.strength_days_week, 1), "strength days/week (target 2)");
+      if (m.azm_week != null) kv(fmt(m.azm_week), "Google zone minutes/week (heart-rate based, reads high at a high resting HR)");
+      c.append(row); g.append(c);
+    }
+    const t = $("sessTable"); t.replaceChildren();
+    const sess = (act.data && act.data.sessions) || [];
+    const head = el("tr"); ["Date", "Type", "Minutes", "Avg HR", "Steps", "Distance"].forEach((h, i) => head.append(el("th", i > 1 ? "r" : null, h))); t.append(head);
+    if (!sess.length) { const r = el("tr"); const c = el("td", "muted", act.data ? "No workouts in 30 days" : "Not loaded"); c.colSpan = 6; r.append(c); t.append(r); }
+    [...sess].reverse().forEach((x) => {
+      const r = el("tr");
+      r.append(el("td", null, shortDay(x.date)), el("td", null, x.name || x.type), el("td", "r", fmt(x.duration_min)), el("td", "r", fmt(x.avg_hr)),
+               el("td", "r", x.steps ? fmt(x.steps) : "—"), el("td", "r", x.distance_m ? fmt(x.distance_m / 1000, 2) + " km" : "—"));
+      t.append(r);
+    });
+  }
+
+  function renderRunning() {
+    const sec = section("running"), card = $("planCard");
+    card.replaceChildren(); card.className = "card stripe";
+    if (!sec.data) { errorBox(card, sec, "running data"); }
+    else {
+      const plan = sec.data.plan, pc = plan && plan.components;
+      if (pc && pc.status === "no_race") card.append(el("h2", null, "No race configured"),
+        ...noRaceLines(pc).map((l) => el("p", "muted", l)));
+      else if (!pc) card.append(el("p", "muted", "No race plan yet."));
+      else {
+        const st = pc.status || plan.status;
+        card.classList.add(st === "on_track" ? "ok" : st === "tight" ? "warn" : "bad");
+        const head = el("div", "charthead"); head.append(el("h2", null, st.replace(/_/g, " ")), el("span", "muted", "race " + dayFmt(pc.race_date)));
+        card.append(head);
+        const row = el("div", "row"); row.style.margin = "8px 0";
+        const kv = (b, s) => { const d = el("div", "kv"); d.append(el("b", "num", b), el("span", null, s)); row.append(d); };
+        kv(pc.weeks_left != null ? String(pc.weeks_left) : "—", "weeks left");
+        kv(pc.weeks_needed != null ? String(pc.weeks_needed) : "—", "weeks a gradual build needs");
+        if (pc.weeks_short) kv(String(pc.weeks_short), "weeks short");
+        kv(pc.longest_km != null ? fmt(pc.longest_km, 1) + " km" : "none yet", "longest run");
+        if (plan.riegel_min != null) kv(fmt(plan.riegel_min) + " min", "finish-time estimate");
+        card.append(row);
+        const race = pc.race_km || 10, start = pc.planning_km || pc.longest_km || pc.first_run_km || 0, safe = pc.safe_by_race_km;
+        const tk = el("div", "track"); const max = Math.max(race, safe || 0) * 1.05;
+        const P = (v) => (v / max * 100) + "%";
+        tk.append(el("div", "line"));
+        const fill = el("div", "fill"); fill.style.width = P(safe || start); tk.append(fill);
+        const pin = (v, col, lab) => { const p = el("div", "pin"); p.style.left = P(v); p.style.background = `var(${col})`; tk.append(p);
+                                        const l = el("div", "lab", lab); l.style.left = P(v); tk.append(l); };
+        if (start) pin(start, "--muted", (pc.longest_km != null ? "now " : "first run ") + fmt(start, 1) + " km");
+        if (safe != null) pin(safe, "--run", "safe by race day " + fmt(safe, 1) + " km");
+        pin(race, "--fg", "goal " + fmt(race, 0) + " km");
+        card.append(tk);
+        card.append(el("p", "muted", st === "on_track" ? "A gradual build of about 10% a week, with easier cutback weeks, reaches race distance in time."
+          : st === "tight" ? "Tight but doable: keep increases to about 10% a week and keep the cutback weeks."
+          : "Don't increase by more than about 10% a week to catch up. Consider run-walk on race day or a later race."));
+        if (plan.evidence_ids) card.append(evidence(plan.evidence_ids));
+      }
+      const t = $("runTable"); t.replaceChildren();
+      const head = el("tr"); ["Date", "Distance", "Pace", "Avg HR", "Easy (Z0–2)", "Spike"].forEach((h, i) => head.append(el("th", i ? "r" : null, h))); t.append(head);
+      const runs = sec.data.runs || [];
+      if (!runs.length) { const r = el("tr"); const c = el("td", "muted", "No runs logged yet."); c.colSpan = 6; r.append(c); t.append(r); }
+      [...runs].reverse().forEach((x) => {
+        const easy = ["z0_min", "z1_min", "z2_min"].reduce((a, k) => a + (x[k] || 0), 0);
+        const all = ["z0_min", "z1_min", "z2_min", "z3_min", "z4_min", "z5_min"].reduce((a, k) => a + (x[k] || 0), 0);
+        const pace = x.pace_min_km ? Math.floor(x.pace_min_km) + ":" + String(Math.round((x.pace_min_km % 1) * 60)).padStart(2, "0") + " /km" : "—";
+        const r = el("tr");
+        r.append(el("td", null, shortDay(x.local_date)), el("td", "r", x.distance_km != null ? fmt(x.distance_km, 2) + " km" : "—"), el("td", "r", pace),
+                 el("td", "r", fmt(x.avg_hr)), el("td", "r", all ? Math.round(easy / all * 100) + "%" : "—"), el("td", "r", x.spike_class || "—"));
+        t.append(r);
+      });
+      $("runNote").textContent = sec.data.note || "";
+    }
+  }
+
+  function renderBodyAge() {
+    const sec = section("bodyage"), head = $("ageHead"), lev = $("ageLevers"), comps = $("ageComps");
+    if (!sec.data) { [head, lev, comps].forEach((h) => errorBox(h, sec, "body age")); return; }
+    const b = sec.data, d = b.details || {};
+    head.replaceChildren(el("h3", null, "Body age · as of " + shortDay(b.as_of)), el("div", "big num", d.display || fmt(b.value, 1)));
+    head.lastChild.style.fontSize = "38px";
+    head.append(el("p", "muted", (d.age ? "Your age " + d.age + ". " : "") + (b.status === "provisional" ? "Provisional: not enough days yet for full confidence. " : "") +
+      (d.change_30d != null ? "Trend: " + (Math.abs(d.change_30d) < 1 ? "stable over 30 days" : (d.change_30d > 0 ? "+" : "") + fmt(d.change_30d, 1) + " y over 30 days") + ". " : "")));
+    head.append(el("p", "faint", d.caveat || ""));
+    (d.missing || []).forEach((k) => head.append(el("p", "muted", "Not included: " + (COMP[k] || k))));
+    if (b.evidence_ids) head.append(evidence(b.evidence_ids));
+    lev.replaceChildren();
+    const levers = Object.entries(d.levers || {}).sort((a, c) => a[1] - c[1]);
+    if (!levers.length) lev.append(el("span", "muted", "No levers computed."));
+    levers.forEach(([k, v]) => { const p = el("p"); p.append(el("b", "num", fmt(v, 1) + " y "), document.createTextNode(LEVER[k] || k)); lev.append(p); });
+    comps.replaceChildren();
+    const entries = Object.entries(d.components || {});
+    const maxAbs = Math.max(1, ...entries.map(([, c]) => Math.abs(c.years || 0)));
+    entries.sort((a, c) => (c[1].years || 0) - (a[1].years || 0)).forEach(([k, c]) => {
+      comps.append(el("span", null, COMP[k] || k));
+      const ax = el("div", "axis");
+      if (c.years != null) {
+        const bar = el("i"); const w = Math.abs(c.years) / maxAbs * 50;
+        bar.style.width = w + "%"; bar.style.left = c.years >= 0 ? "50%" : (50 - w) + "%";
+        bar.style.background = c.years >= 0 ? "var(--age)" : "var(--ok)"; ax.append(bar);
+      }
+      comps.append(ax, el("span", "num " + (c.years == null ? "faint" : ""), c.years == null ? (c.excluded ? "estimated, not scored" : "—") : (c.years >= 0 ? "+" : "") + fmt(c.years, 1) + " y"));
+    });
+  }
+
+  function render() {
+    renderHeader();
+    const tab = state.tab;
+    if (tab === "today") renderToday();
+    if (tab === "trends") renderTrends();
+    if (tab === "sleep") renderSleep();
+    if (tab === "activity") renderActivity();
+    if (tab === "running") renderRunning();
+    if (tab === "bodyage") renderBodyAge();
+  }
+
+  function selectTab(tab) {
+    if (!TABS.includes(tab)) tab = TABS[0];  // a hidden or unknown tab opens the first configured one
+    state.tab = tab;
+    document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+    document.querySelectorAll("[data-page]").forEach((p) => { p.hidden = p.dataset.page !== tab; });
+    try { history.replaceState(null, "", "#" + tab); } catch (e) { /* framed */ }
+    render();
+  }
+
+  // ---------- controls ----------
+  document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => selectTab(b.dataset.tab)));
+  $("refreshBtn").addEventListener("click", async () => {
+    $("refreshBtn").disabled = true; await loadSnapshot(); await loadLive(Object.keys(SOURCES()), true); render();
+  });
+  $("dayPrev").addEventListener("click", async () => {
+    const cur = state.day || (section("overview").data || {}).date || todayIso();
+    state.day = isoAdd(cur, -1); await loadLive(["overview"], false); render();
+  });
+  $("dayNext").addEventListener("click", async () => {
+    if (!state.day) return;
+    const next = isoAdd(state.day, 1); state.day = next >= todayIso() ? null : next; await loadLive(["overview"], false); render();
+  });
+  $("rangeSeg").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-days]"); if (!b || b.disabled) return;
+    state.range = Number(b.dataset.days); render();
+    if (state.mcp && state.mode === "live") { await loadLive(["trends"], false); render(); }
+  });
+  let resizeT = null;
+  window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(render, 150); });
+  (() => {  // hide the tabs the config leaves out, order the rest as configured and show the first one
+    const nav = document.querySelector(".tabs");
+    ALL_TABS.forEach((t) => {
+      const btn = $("tab-" + t), page = $("page-" + t);
+      if (!TABS.includes(t)) { if (btn) btn.hidden = true; if (page) { page.hidden = true; page.dataset.page = "off:" + t; } }
+    });
+    TABS.forEach((t) => { const btn = $("tab-" + t); if (btn && nav) nav.append(btn); });
+    if (TABS.length && !TABS.includes(state.tab)) {
+      state.tab = TABS[0];
+      document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === state.tab)));
+      document.querySelectorAll("[data-page]").forEach((p) => { p.hidden = p.dataset.page !== state.tab; });
+    }
+  })();
+  const fromHash = () => {
+    const h = (location.hash || "").slice(1);
+    if (TABS.includes(h)) { if (h !== state.tab) selectTab(h); }
+    else if (ALL_TABS.includes(h) && TABS.length) selectTab(TABS[0]);  // a hidden tab: open the first configured one
+  };
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
+  boot();
+})();
+</script>

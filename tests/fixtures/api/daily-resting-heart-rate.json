@@ -1,0 +1,13 @@
+{
+  "dailyRestingHeartRate": {
+    "date": {
+      "year": 2030,
+      "month": 1,
+      "day": 15
+    },
+    "beatsPerMinute": "62",
+    "dailyRestingHeartRateMetadata": {
+      "calculationMethod": "WITH_SLEEP"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+# Your profile. Edit freely; `fitbit-air config check` validates it.
+# Body age is only calculated when sex = "male" (its reference data is for men).
+sex = "unspecified"        # male | female | unspecified
+sleep_need_h = 7.5
+goals = []
+units = "metric"           # metric | imperial: used by the coach for wording; report and dashboard show metric for now
+
+[plugins]
+enabled = false

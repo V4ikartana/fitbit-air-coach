@@ -1,0 +1,10 @@
+# A 10 km runner's starting point. Replace the example race with yours.
+sex = "unspecified"        # set to "male" to get body age (its reference data is for men)
+race_date = "2027-10-10"   # example date: change it
+race_distance_km = 10.0
+sleep_need_h = 7.5
+goals = ["running_10k", "cardio", "sleep", "recovery", "weight"]
+units = "metric"           # metric | imperial: used by the coach for wording; report and dashboard show metric for now
+
+[plugins]
+enabled = false

@@ -1,0 +1,14 @@
+data/
+secrets/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+.superpowers/
+.claude/
+/data.migrated-*/
+/secrets.migrated-*/
+/launchd-backup/
+/config/
+/plugins/

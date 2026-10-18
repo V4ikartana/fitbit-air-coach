@@ -1,0 +1,12 @@
+{
+  "dailySleepTemperatureDerivations": {
+    "date": {
+      "year": 2030,
+      "month": 1,
+      "day": 15
+    },
+    "nightlyTemperatureCelsius": 33.6,
+    "baselineTemperatureCelsius": 33.5,
+    "relativeNightlyStddev30dCelsius": 0.3
+  }
+}

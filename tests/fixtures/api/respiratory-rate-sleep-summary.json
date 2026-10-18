@@ -1,0 +1,37 @@
+{
+  "dataPointName": "users/me/dataTypes/respiratory-rate-sleep-summary/dataPoints/synthetic-1",
+  "respiratoryRateSleepSummary": {
+    "sampleTime": {
+      "physicalTime": "2030-01-15T00:00:00Z",
+      "utcOffset": "0s",
+      "civilTime": {
+        "date": {
+          "year": 2030,
+          "month": 1,
+          "day": 15
+        },
+        "time": {}
+      }
+    },
+    "deepSleepStats": {
+      "breathsPerMinute": 14.5,
+      "standardDeviation": 0.6,
+      "signalToNoise": 5.0
+    },
+    "lightSleepStats": {
+      "breathsPerMinute": 14.5,
+      "standardDeviation": 0.6,
+      "signalToNoise": 5.0
+    },
+    "remSleepStats": {
+      "breathsPerMinute": 14.5,
+      "standardDeviation": 0.6,
+      "signalToNoise": 5.0
+    },
+    "fullSleepStats": {
+      "breathsPerMinute": 14.5,
+      "standardDeviation": 0.6,
+      "signalToNoise": 5.0
+    }
+  }
+}

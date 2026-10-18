@@ -1,0 +1,20 @@
+{
+  "dataPointName": "users/me/dataTypes/weight/dataPoints/synthetic-1",
+  "weight": {
+    "sampleTime": {
+      "physicalTime": "2030-01-15T00:00:00.000000Z",
+      "utcOffset": "0s",
+      "civilTime": {
+        "date": {
+          "year": 2030,
+          "month": 1,
+          "day": 15
+        },
+        "time": {
+          "nanos": 0
+        }
+      }
+    },
+    "weightGrams": 75000
+  }
+}

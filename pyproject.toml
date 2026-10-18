@@ -1,0 +1,47 @@
+[project]
+name = "fitbit-air"
+version = "0.1.0"
+description = """\
+Unofficial: sync your Fitbit Air data from the Google Health API v4 to a local database, analyse it, and coach \
+you through Claude (MCP)."""
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{name = "Vaikartana"}]
+requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "httpx>=0.27",
+    "google-auth>=2.30",
+    "google-auth-oauthlib>=1.2",
+    "requests>=2.32",
+    "keyring>=25.0",
+    "typer>=0.12",
+    "mcp>=2.3,<3",
+]
+
+[project.scripts]
+fitbit-air = "fitbit_air.cli:app"
+
+[project.urls]
+Repository = "https://github.com/v4ikartana/fitbit-air-coach"
+Issues = "https://github.com/v4ikartana/fitbit-air-coach/issues"
+
+[dependency-groups]
+dev = ["pytest>=8.0", "respx>=0.21"]
+
+[build-system]
+requires = ["hatchling>=1.27"]  # 1.27+ reads the SPDX license expression (PEP 639)
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fitbit_air"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

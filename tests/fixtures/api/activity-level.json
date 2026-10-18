@@ -1,0 +1,29 @@
+{
+  "activityLevel": {
+    "interval": {
+      "startTime": "2030-01-15T00:00:00Z",
+      "startUtcOffset": "0s",
+      "endTime": "2030-01-15T00:01:00Z",
+      "endUtcOffset": "0s",
+      "civilStartTime": {
+        "date": {
+          "year": 2030,
+          "month": 1,
+          "day": 15
+        },
+        "time": {}
+      },
+      "civilEndTime": {
+        "date": {
+          "year": 2030,
+          "month": 1,
+          "day": 15
+        },
+        "time": {
+          "minutes": 1
+        }
+      }
+    },
+    "activityLevelType": "LIGHTLY_ACTIVE"
+  }
+}

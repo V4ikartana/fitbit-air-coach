@@ -1,0 +1,31 @@
+{
+  "dailyHeartRateZones": {
+    "date": {
+      "year": 2030,
+      "month": 1,
+      "day": 15
+    },
+    "heartRateZones": [
+      {
+        "heartRateZoneType": "LIGHT",
+        "minBeatsPerMinute": "98",
+        "maxBeatsPerMinute": "116"
+      },
+      {
+        "heartRateZoneType": "MODERATE",
+        "minBeatsPerMinute": "117",
+        "maxBeatsPerMinute": "135"
+      },
+      {
+        "heartRateZoneType": "VIGOROUS",
+        "minBeatsPerMinute": "136",
+        "maxBeatsPerMinute": "155"
+      },
+      {
+        "heartRateZoneType": "PEAK",
+        "minBeatsPerMinute": "156",
+        "maxBeatsPerMinute": "190"
+      }
+    ]
+  }
+}

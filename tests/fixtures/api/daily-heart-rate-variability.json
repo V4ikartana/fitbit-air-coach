@@ -1,0 +1,13 @@
+{
+  "dailyHeartRateVariability": {
+    "date": {
+      "year": 2030,
+      "month": 1,
+      "day": 15
+    },
+    "averageHeartRateVariabilityMilliseconds": 45,
+    "nonRemHeartRateBeatsPerMinute": "58",
+    "entropy": 2.5,
+    "deepSleepRootMeanSquareOfSuccessiveDifferencesMilliseconds": 50.0
+  }
+}

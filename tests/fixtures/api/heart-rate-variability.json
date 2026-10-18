@@ -1,0 +1,21 @@
+{
+  "heartRateVariability": {
+    "sampleTime": {
+      "physicalTime": "2030-01-15T00:00:00Z",
+      "utcOffset": "0s",
+      "civilTime": {
+        "date": {
+          "year": 2030,
+          "month": 1,
+          "day": 15
+        },
+        "time": {}
+      }
+    },
+    "rootMeanSquareOfSuccessiveDifferencesMilliseconds": 40,
+    "metadata": {
+      "highFrequencyPower": 400,
+      "lowFrequencyPower": 600
+    }
+  }
+}
