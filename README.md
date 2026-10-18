@@ -132,9 +132,9 @@ coach and the dashboard snapshot all read those tables through the same function
   - whatever Claude reads into a conversation through the coach;
   - the dashboard snapshot (under 240 KB), if you publish the dashboard: your data status and overview, 30- and
     90-day trends, the last 14 days of sleep, 30 days of activity and 90 days of runs, body age and your active
-    coach notes, stored privately in your Claude Artifact;
-  - the dashboard page loads its fonts from Google Fonts (`fonts.googleapis.com`) whenever it is viewed.
-- **No telemetry:** apart from the above, the code sends nothing anywhere. There is no analytics or usage
+    coach notes, stored privately in your Claude Artifact.
+- **No telemetry:** apart from the above, the code sends nothing anywhere. The dashboard page is self-contained:
+  it uses your system fonts and loads no outside scripts, fonts or images. There is no analytics or usage
   reporting.
 - **Plugins** run with your user's permissions. Only install code you wrote or have read.
 

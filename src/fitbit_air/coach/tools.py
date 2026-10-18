@@ -260,6 +260,13 @@ def get_body_age(ctx: Ctx, date: str | None = None) -> dict:
             "confidence": row["confidence"], "details": row["components"], "evidence_ids": row["evidence_ids"]}
 
 
+def evidence_source(reg: Registry, source_id: str) -> dict:
+    """One registry source as get_evidence reports it (JSON-able). The id must be in the registry."""
+    src = dataclasses.asdict(reg.source(source_id))
+    src["used_for"] = list(src["used_for"])
+    return src
+
+
 @coach_tool
 def get_evidence(ctx: Ctx, ids: list[str]) -> dict:
     ids = [ids] if isinstance(ids, str) else ids
@@ -278,9 +285,7 @@ def get_evidence(ctx: Ctx, ids: list[str]) -> dict:
             else:
                 sources[i] = {"kind": "plugin", "name": i.removeprefix("plugin:"), "note": note}
         elif ctx.reg.has(i):
-            src = dataclasses.asdict(ctx.reg.source(i))
-            src["used_for"] = list(src["used_for"])
-            sources[i] = src
+            sources[i] = evidence_source(ctx.reg, i)
         else:
             unknown.append(i)
     return {"sources": sources, "unknown": unknown}

@@ -66,3 +66,11 @@ def test_broken_profile_falls_back_to_defaults_and_is_recorded(tmp_path):
     runner.run_analysis(store, paths, date(2026, 10, 9))
     assert "config error" in store.last_analysis()["error"] and _safety(store)
     store.close()
+
+
+def test_a_past_today_scores_that_day_and_nothing_after(tmp_path):
+    paths, store = _home(tmp_path)
+    runner.run_analysis(store, paths, date(2026, 9, 20), today=date(2026, 10, 1))
+    days = {r[0] for r in store.conn.execute("SELECT DISTINCT local_date FROM scores_daily")}
+    assert "2026-10-01" in days and max(days) == "2026-10-01"
+    store.close()

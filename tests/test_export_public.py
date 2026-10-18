@@ -99,7 +99,8 @@ def test_deny_beats_allow(rel):
 
 @pytest.mark.parametrize("rel", ["src/fitbit_air/a/b.py", "tests/fixtures/api/x.json", "docs/setup.md",
                                  ".github/ISSUE_TEMPLATE/bug_report.md", "scripts/make_fixtures.py", "NOTICE",
-                                 "src/fitbit_air/templates/minimal/config/profile.toml", "src/fitbit_air/tokens.py"])
+                                 "src/fitbit_air/templates/minimal/config/profile.toml", "src/fitbit_air/tokens.py",
+                                 "scripts/make_demo_home.py", "scripts/dashboard_preview.py"])
 def test_allowed(rel):
     assert ex.selected(rel) is True
 

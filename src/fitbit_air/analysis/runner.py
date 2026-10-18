@@ -14,10 +14,11 @@ from .profile import Profile, load_profile, profile_path
 MAX_PLUGIN_ERRORS = 5  # per run; the summary line carries the full count
 
 
-def run_analysis(store: Store, paths: Paths, since: date | None = None):
-    """Recompute analysis from `since` (default: 60 days ago) and record the run. A broken config file falls back
-    to defaults for that file and is recorded as the run's error: a config never suppresses the built-in rows."""
-    today = date.today()
+def run_analysis(store: Store, paths: Paths, since: date | None = None, today: date | None = None):
+    """Recompute analysis from `since` (default: 60 days before `today`, which defaults to the real today) and record
+    the run. A broken config file falls back to defaults for that file and is recorded as the run's error: a config
+    never suppresses the built-in rows."""
+    today = today or date.today()
     since = since or today - timedelta(days=60)
     reg, problems = registry_for(paths)  # first: if it ever raised, no run would be left half-recorded
     run_id = store.start_analysis_run(since.isoformat())

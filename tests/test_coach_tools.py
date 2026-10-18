@@ -185,6 +185,12 @@ def test_evidence_known_and_unknown(ctx):
     assert list(single["sources"]) == ["tudorlocke2019_cadence"] and single["unknown"] == []
 
 
+def test_evidence_source_is_the_shared_registry_lookup(ctx):
+    src = tools.evidence_source(ctx.reg, "tudorlocke2019_cadence")
+    assert src == tools.get_evidence(ctx, ["tudorlocke2019_cadence"])["sources"]["tudorlocke2019_cadence"]
+    assert isinstance(src["used_for"], list) and src["id"] == "tudorlocke2019_cadence"
+
+
 def test_data_status(ctx):
     seed_sync(ctx.store, "2026-10-17T04:00:00Z")
     ctx.store.set_meta("auth_completed_at", "2026-10-12T06:00:00Z")

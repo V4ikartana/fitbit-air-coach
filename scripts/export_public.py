@@ -35,6 +35,7 @@ ALLOW = [
     "src/**", "tests/**", "docs/*.md", "dashboard/README.md",
     "scripts/check_public.py", "scripts/export_public.py", "scripts/make_fixtures.py",
     "scripts/build_private_scan_list.py", "scripts/register_claude_desktop.py",
+    "scripts/make_demo_home.py", "scripts/dashboard_preview.py",
     "README.md", "pyproject.toml", "uv.lock", ".gitignore",
     "LICENSE", "NOTICE", "DISCLAIMER.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md",
     ".github/**",

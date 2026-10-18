@@ -1,176 +1,377 @@
+<meta charset="utf-8">
 <title>Fitbit Air Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one column of stat bands under a sticky tab bar; rings lead Today, everything else is charts in panels. */
+/* Layout: a sticky pill tab bar over one page at a time; scores lead, then tiles, then charts in cards. */
 :root {
-  --bg: #0c0f12; --panel: #141a1f; --panel-2: #1b232a; --line: #26313a;
-  --fg: #e6ecef; --muted: #8b99a4; --faint: #5d6a74;
-  --recovery: #3ed68c; --sleep: #6fa8ff; --age: #f2a944; --run: #c38cff;
-  --ok: #3ed68c; --warn: #f2a944; --bad: #ff6464;
-  --track: #222b33; --tip: #0f1418;
-  --display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
-  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --bg: #0B0C0E; --panel: #16181C; --panel-2: #1E2126; --line: #2A2E35;
+  --fg: #F5F6F7; --muted: #A1A6AE; --faint: #6B717A;
+  --recovery: #2FD08A; --sleep: #7B8CFF; --age: #C084FC; --run: #FF6A3D;
+  --ok: #2FD08A; --warn: #FFC23D; --bad: #FF5A5F;
+  --track: #262A30; --tip: #22262C;
+  --shadow: none;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1); --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-ui: 200ms; --t-page: 320ms; --t-fill: 900ms;
+  --gutter: 32px;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --bg: #f4f6f7; --panel: #ffffff; --panel-2: #eef2f4; --line: #dbe2e6;
-    --fg: #14191d; --muted: #5a6872; --faint: #8e9aa3;
-    --recovery: #12a663; --sleep: #2f74e0; --age: #c97a08; --run: #8a4fd6;
-    --ok: #12a663; --warn: #c97a08; --bad: #d63a3a;
-    --track: #e2e8ec; --tip: #ffffff; color-scheme: light;
+    --bg: #F5F5F7; --panel: #FFFFFF; --panel-2: #F0F1F4; --line: #E3E5EA;
+    --fg: #1D1D1F; --muted: #6B6B70; --faint: #A1A1A6;
+    --recovery: #12A86B; --sleep: #5A5FE0; --age: #9D5CE6; --run: #EB5B3C;
+    --ok: #12A86B; --warn: #C98A00; --bad: #E0353B;
+    --track: #E6E8EC; --tip: #FFFFFF;
+    --shadow: 0 1px 2px rgb(0 0 0 / .04), 0 4px 16px rgb(0 0 0 / .05); color-scheme: light;
   }
 }
 :root[data-theme="light"] {
-  --bg: #f4f6f7; --panel: #ffffff; --panel-2: #eef2f4; --line: #dbe2e6;
-  --fg: #14191d; --muted: #5a6872; --faint: #8e9aa3;
-  --recovery: #12a663; --sleep: #2f74e0; --age: #c97a08; --run: #8a4fd6;
-  --ok: #12a663; --warn: #c97a08; --bad: #d63a3a;
-  --track: #e2e8ec; --tip: #ffffff; color-scheme: light;
+  --bg: #F5F5F7; --panel: #FFFFFF; --panel-2: #F0F1F4; --line: #E3E5EA;
+  --fg: #1D1D1F; --muted: #6B6B70; --faint: #A1A1A6;
+  --recovery: #12A86B; --sleep: #5A5FE0; --age: #9D5CE6; --run: #EB5B3C;
+  --ok: #12A86B; --warn: #C98A00; --bad: #E0353B;
+  --track: #E6E8EC; --tip: #FFFFFF;
+  --shadow: 0 1px 2px rgb(0 0 0 / .04), 0 4px 16px rgb(0 0 0 / .05); color-scheme: light;
 }
-body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 14px; line-height: 1.45; }
-.fa { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-      padding-block: 12px 32px; max-width: 1100px; margin-inline: auto; }
-.fa * { box-sizing: border-box; }
-.fa h1, .fa h2, .fa h3 { font-family: var(--display); font-weight: 600; letter-spacing: .01em; margin: 0; text-wrap: balance; }
-.fa h1 { font-size: 26px; }
-.fa h2 { font-size: 19px; }
-.fa h3 { font-size: 15px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+html { scroll-padding-top: 80px; -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 15px; line-height: 22px;
+       -webkit-font-smoothing: antialiased; }
+.fa { max-width: 1264px; margin-inline: auto; overflow-x: clip;
+      padding: 0 max(var(--gutter), env(safe-area-inset-right, 0px)) 0 max(var(--gutter), env(safe-area-inset-left, 0px)); }
+.fa *, .fa *::before, .fa *::after { box-sizing: border-box; }
+.fa h1, .fa h2, .fa h3, .fa p { margin: 0; }
+.fa h2, .fa h3 { text-wrap: balance; }
 .num { font-variant-numeric: tabular-nums; }
 .muted { color: var(--muted); }
-.faint { color: var(--faint); }
 .mono { font-family: var(--mono); font-size: 12px; }
+.eyebrow, .fa .card h3, .fa .tile h3, .block > h3 { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted); }
+.note { font-size: 13px; line-height: 18px; color: var(--muted); }
+[hidden] { display: none !important; }
+.skip { position: absolute; left: -9999px; top: 8px; z-index: 30; background: var(--panel); color: var(--fg); padding: 10px 16px;
+        border-radius: 999px; text-decoration: none; font-weight: 600; }
+.skip:focus { left: 16px; }
+.fa :focus-visible, .skip:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
 
-.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
-.top .grow { flex: 1 1 auto; }
-.chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line);
-        font-size: 12px; color: var(--muted); background: var(--panel); }
-.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; padding: 24px 0 4px; }
+.top .brand { min-width: 0; flex: 1 1 220px; }
+.top h1 { font-size: 17px; line-height: 22px; font-weight: 700; letter-spacing: -.01em; }
+#freshLine { font-size: 13px; line-height: 18px; color: var(--muted); margin-top: 2px; }
+#freshLine.stale::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warn);
+                           margin-right: 6px; vertical-align: 0; }
+.actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 12px; border-radius: 999px;
+        background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); font-size: 13px; color: var(--fg); }
+.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
 .chip.live .dot { background: var(--ok); }
 .chip.snap .dot { background: var(--warn); }
 .chip.off .dot { background: var(--bad); }
-.btn { font: inherit; font-size: 13px; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
-       padding: 5px 11px; cursor: pointer; }
-.btn:hover { border-color: var(--muted); }
-.btn:focus-visible, .tab:focus-visible, .seg button:focus-visible, summary:focus-visible { outline: 2px solid var(--sleep); outline-offset: 2px; }
+.btn { font: inherit; font-size: 13px; font-weight: 600; color: var(--fg); background: var(--panel-2); border: 0; border-radius: 999px;
+       box-shadow: inset 0 0 0 1px var(--line); min-height: 36px; padding: 0 16px; cursor: pointer; }
+.btn:hover { background: var(--panel); }
 .btn[disabled] { opacity: .45; cursor: default; }
 
-.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; gap: 2px; overflow-x: auto;
-        border-bottom: 1px solid var(--line); margin: 12px 0 14px; scrollbar-width: none; }
-.tab { font: inherit; font-family: var(--display); font-size: 16px; letter-spacing: .02em; color: var(--muted); background: none; border: 0;
-       padding: 9px 12px 8px; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
-.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--fg); }
+/* tabs */
+.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+        margin: 12px calc(var(--gutter) * -1) 24px; padding: 10px var(--gutter);
+        background: color-mix(in srgb, var(--bg) 90%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+        box-shadow: 0 1px 0 var(--line); }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: 0 0 auto; font: inherit; font-size: 14px; font-weight: 600; color: var(--muted); background: transparent; border: 0;
+       border-radius: 999px; min-height: 40px; padding: 0 16px; cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"] { color: var(--fg); background: var(--panel); box-shadow: inset 0 0 0 1px var(--line), var(--shadow); }
 
-.notice { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;
-          display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
-.notice.safety { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--panel)); }
-.notice.warn { border-color: color-mix(in srgb, var(--warn) 60%, var(--line)); }
-.notice p { margin: 0; flex: 1 1 260px; min-width: 0; }
+/* page scaffolding */
+.pagehead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; margin-bottom: 20px; }
+.pagehead > div:first-child { min-width: 0; }
+.pagehead h2 { font-size: 28px; line-height: 32px; font-weight: 700; letter-spacing: -.02em; margin-top: 2px; }
+.block { margin-top: 32px; display: grid; gap: 12px; min-width: 0; align-content: start; }
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 32px; align-items: start; }
+.cols > .block { margin-top: 0; }
+.card { background: var(--panel); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); min-width: 0; outline: 1px solid transparent; }
+.card > h3 + * { margin-top: 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 16px; }
+.wide { grid-column: 1 / -1; }
 
-.rings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 6px 0 16px; }
-.ring { display: grid; justify-items: center; align-content: start; gap: 4px; text-align: center; min-width: 0; }
-.ring svg { width: min(132px, 100%); height: auto; }
-.ring .label { font-family: var(--display); font-size: 16px; }
-.ring .sub { font-size: 12px; color: var(--muted); }
-.ring.muted .arc { stroke: var(--faint) !important; }
+.notice { background: var(--panel); border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; box-shadow: var(--shadow), inset 0 0 0 1px var(--line);
+          display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.notice p { flex: 1 1 260px; min-width: 0; }
+.notice.warn { box-shadow: var(--shadow), inset 4px 0 0 var(--warn), inset 0 0 0 1px var(--line); padding-left: 20px; }
+.notice.safety { background: color-mix(in srgb, var(--bad) 14%, var(--panel)); box-shadow: inset 4px 0 0 var(--bad), inset 0 0 0 1px var(--bad);
+                 padding-left: 20px; }
 
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; }
-#todayCards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
-@media (min-width: 461px) and (max-width: 900px) { #todayCards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
-.card.stripe { border-left: 3px solid var(--line); }
-.card.stripe.warn { border-left-color: var(--warn); }
-.card.stripe.bad { border-left-color: var(--bad); }
-.card.stripe.ok { border-left-color: var(--ok); }
-.card .big { font-family: var(--display); font-size: 30px; font-weight: 600; line-height: 1.05; }
-.card .row { display: flex; flex-wrap: wrap; gap: 4px 14px; }
-.card .kv { display: grid; gap: 1px; }
-.card .kv b { font-family: var(--display); font-size: 20px; font-weight: 600; }
-.card .kv span { font-size: 12px; color: var(--muted); }
-.card p { margin: 6px 0 0; }
+/* pills: a word always rides with the state colour */
+.pill, .sev { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 2px 10px; border-radius: 999px;
+              background: var(--panel-2); color: var(--fg); font-size: 12px; line-height: 16px; font-weight: 600; text-transform: none;
+              letter-spacing: 0; max-width: 100%; }
+.pill::before, .sev::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.pill.plain::before { display: none; }
+.pill.ok { background: color-mix(in srgb, var(--ok) 16%, var(--panel)); }
+.pill.warn, .sev.watch { background: color-mix(in srgb, var(--warn) 18%, var(--panel)); }
+.pill.bad, .sev.alert { background: color-mix(in srgb, var(--bad) 16%, var(--panel)); }
+.pill.ok::before { background: var(--ok); }
+.pill.warn::before, .sev.watch::before { background: var(--warn); }
+.pill.bad::before, .sev.alert::before { background: var(--bad); }
+.sev { text-transform: capitalize; align-self: start; }
+
+/* score rings */
+.hero3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.hero2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+.score { background: var(--panel); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); min-width: 0;
+         display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px 20px; }
+.score.flat { background: none; box-shadow: none; padding: 0; }
+.ringbox { position: relative; width: 112px; aspect-ratio: 1; }
+.ringbox svg { display: block; width: 100%; height: 100%; }
+.score.muted .arc { stroke: var(--faint); }
+.score-num { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; line-height: 36px; font-weight: 700;
+             letter-spacing: -.02em; }
+.score-num.mid { font-size: 24px; }
+.score-num.small { font-size: 14px; line-height: 18px; font-weight: 600; letter-spacing: 0; padding: 0 18px; text-align: center; }
+.score .meta { display: grid; gap: 6px; min-width: 0; justify-items: start; }
+.score .label { font-size: 17px; line-height: 22px; font-weight: 600; }
+.score .sub { font-size: 13px; line-height: 18px; color: var(--muted); overflow-wrap: anywhere; }
+
+.call { margin-top: 16px; display: grid; gap: 6px; }
+.call h3.callh { font-size: 20px; line-height: 26px; font-weight: 600; letter-spacing: -.01em; text-transform: none; color: var(--fg); }
+
+/* tiles */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 16px; margin-top: 16px; }
+.tile { background: var(--panel); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); min-width: 0; display: grid; gap: 6px;
+        align-content: start; }
+.tile-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 8px; min-height: 24px; }
+.tile-head .go { color: var(--muted); font-size: 18px; line-height: 1; margin-left: auto; }
+.tile .big { overflow-wrap: anywhere; margin-top: 4px; }
+.tile p { font-size: 13px; line-height: 18px; }
 .cardlink { cursor: pointer; }
-.cardlink:hover { border-color: var(--muted); }
-.section { margin-top: 18px; display: grid; gap: 10px; }
-.find { display: grid; gap: 8px; }
-.find .item { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding: 9px 12px; background: var(--panel);
-              border: 1px solid var(--line); border-radius: 10px; }
-.sev { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; padding: 1px 7px; border-radius: 999px; align-self: start;
-       border: 1px solid var(--line); color: var(--muted); }
-.sev.alert { color: var(--bad); border-color: var(--bad); }
-.sev.watch { color: var(--warn); border-color: var(--warn); }
-.find .item .t { font-weight: 600; }
-.find .item .d { grid-column: 2; color: var(--muted); }
-details.ev { grid-column: 2; font-size: 12px; color: var(--faint); }
-details.ev summary { cursor: pointer; width: max-content; }
-details.ev ul { margin: 4px 0 0; padding-left: 16px; }
+.cardlink:hover { background: var(--panel-2); }
 
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.seg button { font: inherit; font-size: 12px; background: var(--panel); color: var(--muted); border: 0; padding: 4px 10px; cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--fg); }
+/* findings */
+.find { display: grid; gap: 12px; }
+.find .item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; padding: 16px; background: var(--panel);
+              border-radius: 16px; box-shadow: var(--shadow); }
+.find .item .t { font-weight: 600; }
+.find .item .d { grid-column: 2; color: var(--muted); font-size: 14px; line-height: 20px; overflow-wrap: anywhere; }
+details.ev { grid-column: 2; font-size: 13px; color: var(--muted); min-width: 0; }
+details.ev summary { cursor: pointer; width: max-content; max-width: 100%; min-height: 32px; display: flex; align-items: center;
+                     font-weight: 600; color: var(--fg); }
+details.ev ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+details.ev li { overflow-wrap: anywhere; }
+
+/* week comparison */
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; line-height: 16px; color: var(--muted); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.wk { display: grid; gap: 16px; margin-top: 14px; }
+.wkrow { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr) auto; gap: 6px 14px; align-items: center; }
+.wkname { font-size: 14px; line-height: 18px; font-weight: 600; min-width: 0; }
+.wkbars { display: grid; gap: 4px; min-width: 0; }
+.wkbar { display: block; height: 8px; border-radius: 4px; background: var(--track); overflow: hidden; }
+.wkbar > i { display: block; height: 100%; border-radius: 4px; transform-origin: left center; }
+.wkbar.prev > i { background: var(--muted); }
+.wkval { text-align: right; display: grid; }
+.wkval b { font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; }
+.wkval span { font-size: 12px; line-height: 16px; color: var(--muted); white-space: nowrap; }
+#targets p { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+#targets p + p { margin-top: 10px; }
+
+/* segmented range control */
+.seg { display: inline-flex; padding: 4px; gap: 2px; background: var(--panel-2); border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); }
+.seg button { font: inherit; font-size: 13px; font-weight: 600; background: transparent; color: var(--muted); border: 0; border-radius: 999px;
+              min-height: 32px; min-width: 52px; padding: 0 12px; cursor: pointer; }
+.seg button:hover { color: var(--fg); }
+.seg button[aria-pressed="true"] { background: var(--panel); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line), var(--shadow); }
 .seg button[disabled] { opacity: .4; cursor: default; }
-.charthead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 10px; }
-.chart { position: relative; min-height: 120px; }
+
+/* charts */
+.tcard-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.tval { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin: 8px 0 4px; }
+.tval .num { font-size: 30px; line-height: 34px; font-weight: 700; letter-spacing: -.02em; }
+.unit { font-size: 14px; color: var(--muted); font-weight: 500; }
+.chart { position: relative; min-height: 150px; margin-top: 8px; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
-.chart .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--faint); font-size: 12px; }
-.tip { position: absolute; pointer-events: none; background: var(--tip); border: 1px solid var(--line); border-radius: 8px;
-       padding: 4px 8px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.25); white-space: nowrap; z-index: 3; }
+.chart svg text { font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.chart .empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
+.tip { position: absolute; top: 0; left: 0; pointer-events: none; background: var(--tip); color: var(--fg); border-radius: 10px;
+       padding: 6px 10px; font-size: 12px; line-height: 16px; box-shadow: inset 0 0 0 1px var(--line), 0 8px 24px rgb(0 0 0 / .28);
+       width: max-content; max-width: 100%; z-index: 3; font-variant-numeric: tabular-nums; }
 .tip .k { color: var(--muted); }
-.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
-.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.card p.note { margin-top: 8px; }
 
 .tablewrap { overflow-x: auto; }
-.fa table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.fa th { text-align: left; font-weight: 500; color: var(--muted); border-bottom: 1px solid var(--line); padding: 6px 8px; white-space: nowrap; }
-.fa td { border-bottom: 1px solid var(--line); padding: 6px 8px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fa table { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 18px; }
+.fa th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; border-bottom: 1px solid var(--line); padding: 8px; white-space: nowrap; }
+.fa td { border-bottom: 1px solid var(--line); padding: 10px 8px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fa tr:last-child td { border-bottom: 0; }
 .fa td.r, .fa th.r { text-align: right; }
 
-.bar { height: 10px; border-radius: 5px; background: var(--track); position: relative; overflow: hidden; }
-.bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; }
-.diverge { display: grid; grid-template-columns: minmax(90px, auto) 1fr auto; gap: 6px 10px; align-items: center; }
-.diverge .axis { position: relative; height: 14px; }
-.diverge .axis::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; border-left: 1px solid var(--line); }
+/* sleep */
+.sleephero { display: grid; grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 1fr); grid-template-areas: "main ring kv";
+             gap: 24px 32px; align-items: center; }
+.sh-main { grid-area: main; display: grid; gap: 8px; min-width: 0; }
+.sh-ring { grid-area: ring; }
+.sh-kv { grid-area: kv; }
+.hero-num { font-size: 56px; line-height: 56px; font-weight: 700; letter-spacing: -.02em; }
+.hero-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.stagebar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--track); gap: 2px; margin-top: 8px;
+            transform-origin: left center; }
+.stagebar > i { display: block; height: 100%; min-width: 2px; }
+.kv3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.kv { display: grid; gap: 2px; min-width: 0; align-content: start; }
+.kv b { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.kv span { font-size: 12px; line-height: 16px; color: var(--muted); }
+.stats { display: flex; flex-wrap: wrap; gap: 16px 28px; margin: 16px 0; }
+.big { font-size: 30px; line-height: 34px; font-weight: 700; letter-spacing: -.02em; }
+
+/* running */
+.race-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.race-head .muted { font-size: 14px; }
+.race-hero { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 12px; }
+.track { position: relative; height: 16px; margin: 8px 8px 4px; }
+.track .line { position: absolute; left: 0; right: 0; top: 6px; height: 4px; border-radius: 2px; background: var(--track); }
+.track .fill { position: absolute; left: 0; top: 6px; height: 4px; border-radius: 2px; background: var(--run); transform-origin: left center; }
+.track .pin { position: absolute; top: 0; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; box-shadow: 0 0 0 3px var(--panel); }
+.track-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; line-height: 18px; margin-top: 10px; }
+.track-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.track-legend i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.race > p { margin-top: 12px; }
+.wkdist { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; align-items: end; height: 150px; margin-top: 16px; }
+.wkdist .col { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; }
+.wkdist .v { font-size: 11px; line-height: 14px; color: var(--muted); text-align: center; margin-bottom: 4px; white-space: nowrap; overflow: hidden; }
+.wkdist .b { background: var(--muted); border-radius: 5px 5px 2px 2px; }
+.grow-y { transform-origin: center bottom; }
+.chart g.grow-y { transform-box: fill-box; }
+.wkdist .col.cur .b { background: var(--run); }
+.wkdist .col.cur .v { color: var(--fg); font-weight: 600; }
+.wkaxis { display: flex; justify-content: space-between; font-size: 11px; line-height: 14px; color: var(--muted); margin-top: 6px; gap: 8px; }
+.runs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+.runcard { border-radius: 16px; display: grid; gap: 6px; align-content: start; }
+.rc-dist { display: flex; align-items: baseline; gap: 6px; }
+.rc-dist .num { font-size: 32px; line-height: 36px; font-weight: 700; letter-spacing: -.02em; }
+.rc-stats { font-size: 13px; line-height: 18px; color: var(--muted); }
+.rc-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+details.more summary { cursor: pointer; min-height: 32px; display: flex; align-items: center; font-weight: 600; }
+details.more[open] summary { margin-bottom: 8px; }
+
+/* body age */
+.agehero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 20px 32px; align-items: start; }
+.agehero .side { display: grid; gap: 10px; min-width: 0; }
+.agehero .side details.ev { grid-column: auto; }
+.agehero .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.caveat { font-size: 13px; line-height: 18px; color: var(--muted); background: var(--panel-2); border-radius: 12px; padding: 12px 14px; }
+.agegrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px; margin-top: 16px; align-items: start; }
+.levers { list-style: none; margin: 0; padding: 0; }
+.levers li { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0;
+             border-top: 1px solid var(--line); }
+.levers li:first-child { border-top: 0; padding-top: 4px; }
+.levers .rank { width: 28px; height: 28px; border-radius: 50%; background: var(--panel-2); display: grid; place-items: center;
+                font-size: 12px; font-weight: 700; }
+.levers b { font-size: 15px; white-space: nowrap; }
+.diverge { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr) minmax(0, auto); gap: 10px 14px; align-items: center; }
+.diverge .axis { position: relative; height: 14px; min-width: 0; }
+.diverge .axis::before { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; border-left: 1px solid var(--line); }
 .diverge .axis i { position: absolute; top: 2px; height: 10px; border-radius: 4px; }
-.track { position: relative; height: 34px; margin: 10px 4px 4px; }
-.track .line { position: absolute; left: 0; right: 0; top: 15px; height: 4px; border-radius: 2px; background: var(--track); }
-.track .fill { position: absolute; left: 0; top: 15px; height: 4px; border-radius: 2px; background: var(--run); }
-.track .pin { position: absolute; top: 9px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; border: 3px solid var(--bg); }
-.track .lab { position: absolute; top: -6px; font-size: 11px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
-.daypick { display: inline-flex; align-items: center; gap: 4px; }
-.daypick .btn { padding: 2px 9px; }
-[hidden] { display: none !important; }
-@media (prefers-reduced-motion: no-preference) {
-  .ring .arc { transition: stroke-dashoffset .7s cubic-bezier(.2,.7,.2,1); }
+.diverge .v { text-align: right; font-size: 13px; max-width: 8rem; }
+.diverge-key { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr) minmax(0, auto); gap: 14px; font-size: 12px; color: var(--muted); }
+.diverge-key div { display: flex; justify-content: space-between; }
+.daypick { display: inline-flex; align-items: center; gap: 6px; }
+.daypick .btn { min-width: 40px; padding: 0 10px; font-size: 18px; }
+#dayLabel { font-size: 14px; }
+
+.foot { margin-top: 48px; padding: 24px 0 calc(32px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); font-size: 13px;
+        line-height: 18px; color: var(--muted); display: grid; gap: 4px; }
+.foot strong { color: var(--fg); }
+
+@media (max-width: 960px) {
+  .cols { grid-template-columns: minmax(0, 1fr); }
+  .score { grid-template-columns: minmax(0, 1fr); justify-items: center; align-items: start; align-content: start; text-align: center;
+           padding: 16px 10px; }
+  .score .meta { justify-items: center; }
+  .score.flat { padding: 0; }
+  .ringbox { width: min(100%, 112px); }
+  .sleephero { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "main main" "ring kv"; }
+  .agehero, .agegrid { grid-template-columns: minmax(0, 1fr); }
 }
-@media (max-width: 460px) {
-  .card .big { font-size: 26px; }
-  .ring .label { font-size: 14px; }
+@media (max-width: 600px) {
+  :root { --gutter: 16px; }
+  body { font-size: 15px; }
+  .top { padding-top: 16px; }
+  .tabs { margin-bottom: 20px; padding-block: 8px; }
+  .tab, .btn, .seg button { min-height: 44px; }
+  .daypick .btn { min-width: 44px; }
+  details.ev summary, details.more summary { min-height: 44px; }
+  .pagehead h2 { font-size: 24px; line-height: 28px; }
+  .hero3 { gap: 8px; }
+  .hero2 { gap: 12px; }
+  .hero3 .score { padding: 14px 6px; border-radius: 16px; gap: 8px; }
+  .hero3 .score-num { font-size: 24px; line-height: 28px; }
+  .hero3 .score-num.mid { font-size: 19px; }
+  .hero3 .score-num.small { font-size: 12px; line-height: 14px; padding: 0 12px; }
+  .hero3 .score .label { font-size: 14px; line-height: 18px; }
+  .score .sub { font-size: 12px; line-height: 16px; }
+  .pill { justify-content: center; text-align: center; }
+  .card, .tile { padding: 16px; }
+  .grid, .tiles { gap: 12px; }
+  .hero-num { font-size: 44px; line-height: 44px; }
+  .sleephero { grid-template-columns: minmax(0, 1fr); grid-template-areas: "main" "ring" "kv"; gap: 20px; }
+  .wkrow { grid-template-columns: minmax(0, 1fr) auto; }
+  .wkbars { grid-column: 1 / -1; grid-row: 2; }
+  .wkdist { gap: 3px; height: 130px; }
+  .diverge { grid-template-columns: minmax(0, 1fr) auto; grid-auto-flow: row dense; gap: 4px 12px; }
+  .diverge .axis { grid-column: 1 / -1; margin-bottom: 10px; }
+  .diverge .v { max-width: none; }
+  .diverge-key { grid-template-columns: minmax(0, 1fr); }
+  .diverge-key > span { display: none; }
+  .stats { gap: 14px 22px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tab, .btn, .seg button, .cardlink, .chip { transition: background-color var(--t-ui) var(--ease), color var(--t-ui) var(--ease),
+    box-shadow var(--t-ui) var(--ease); }
+  .page.enter { animation: fa-rise var(--t-page) var(--ease-out) both; }
+  .anim .arc { transition: stroke-dashoffset var(--t-fill) var(--ease-out); transition-delay: calc(var(--i, 0) * 60ms); }
+  .anim .grow { animation: fa-grow-x var(--t-fill) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); }
+  .anim .grow-y { animation: fa-grow-y var(--t-fill) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 40ms); }
+  .chip.conn .dot { animation: fa-pulse 1.6s ease-in-out infinite; }
+  @keyframes fa-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes fa-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes fa-grow-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes fa-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fa *, .fa *::before, .fa *::after { animation: none !important; transition: none !important; }
 }
 </style>
 
+<a class="skip" href="#main">Skip to content</a>
 <div class="fa" id="app">
-  <div class="top">
-    <h1 class="grow">Fitbit Air</h1>
-    <span class="chip" id="modeChip"><span class="dot"></span><span id="modeText">Connecting…</span></span>
-    <button class="btn" id="refreshBtn" type="button">Refresh</button>
-  </div>
-  <div class="muted" id="freshLine" style="margin-top:4px">Loading your data…</div>
+  <header class="top">
+    <div class="brand">
+      <h1>Fitbit Air</h1>
+      <p id="freshLine">Loading your data…</p>
+    </div>
+    <div class="actions">
+      <span class="chip conn" id="modeChip"><span class="dot" aria-hidden="true"></span><span id="modeText">Connecting…</span></span>
+      <button class="btn" id="refreshBtn" type="button">Refresh</button>
+    </div>
+  </header>
 
   <nav class="tabs" role="tablist" aria-label="Dashboard pages">
-    <button class="tab" role="tab" id="tab-today" data-tab="today" aria-selected="true">Today</button>
-    <button class="tab" role="tab" id="tab-trends" data-tab="trends" aria-selected="false">Trends</button>
-    <button class="tab" role="tab" id="tab-sleep" data-tab="sleep" aria-selected="false">Sleep</button>
-    <button class="tab" role="tab" id="tab-activity" data-tab="activity" aria-selected="false">Activity</button>
-    <button class="tab" role="tab" id="tab-running" data-tab="running" aria-selected="false">Running</button>
-    <button class="tab" role="tab" id="tab-bodyage" data-tab="bodyage" aria-selected="false">Body age</button>
+    <button class="tab" role="tab" id="tab-today" data-tab="today" aria-selected="true" aria-controls="page-today" tabindex="0" type="button">Today</button>
+    <button class="tab" role="tab" id="tab-trends" data-tab="trends" aria-selected="false" aria-controls="page-trends" tabindex="-1" type="button">Trends</button>
+    <button class="tab" role="tab" id="tab-sleep" data-tab="sleep" aria-selected="false" aria-controls="page-sleep" tabindex="-1" type="button">Sleep</button>
+    <button class="tab" role="tab" id="tab-activity" data-tab="activity" aria-selected="false" aria-controls="page-activity" tabindex="-1" type="button">Activity</button>
+    <button class="tab" role="tab" id="tab-running" data-tab="running" aria-selected="false" aria-controls="page-running" tabindex="-1" type="button">Running</button>
+    <button class="tab" role="tab" id="tab-bodyage" data-tab="bodyage" aria-selected="false" aria-controls="page-bodyage" tabindex="-1" type="button">Body age</button>
   </nav>
 
+  <main id="main" tabindex="-1">
   <div id="banner"></div>
 
-  <section id="page-today" data-page="today">
-    <div class="charthead">
-      <h2 id="todayTitle">Today</h2>
+  <section class="page" id="page-today" data-page="today" role="tabpanel" aria-labelledby="tab-today">
+    <div class="pagehead">
+      <div><p class="eyebrow">Daily summary</p><h2 id="todayTitle">Today</h2></div>
       <span class="daypick" id="dayPick">
         <button class="btn" type="button" id="dayPrev" aria-label="Previous day">‹</button>
         <span class="muted num" id="dayLabel">—</span>
@@ -178,39 +379,47 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
       </span>
     </div>
     <div id="safety"></div>
-    <div class="rings" id="rings">
-      <div class="ring" id="ring-recovery"></div>
-      <div class="ring" id="ring-sleep"></div>
-      <div class="ring" id="ring-age"></div>
+    <div class="hero3" id="rings">
+      <div class="score" id="ring-recovery"></div>
+      <div class="score" id="ring-sleep"></div>
+      <div class="score" id="ring-activity"></div>
     </div>
-    <div class="grid" id="todayCards"></div>
-    <div class="section">
-      <h3>Findings</h3>
-      <div class="find" id="findings"><div class="muted">—</div></div>
-    </div>
-    <div class="section" id="week">
-      <h3>This week vs the four before</h3>
-      <div class="card"><div class="tablewrap"><table id="weekTable"></table></div>
-        <p class="faint" style="font-size:12px">Average of the last 7 days against the 28 days before them, from your daily values. Fewer days of data make the comparison weaker.</p></div>
-      <div class="card"><h2>Coach targets</h2><div id="targets" class="muted" style="margin-top:6px">—</div></div>
+    <div class="card call" id="todayCall" hidden></div>
+    <div class="tiles" id="todayCards"></div>
+    <div class="cols">
+      <div class="block">
+        <h3>Findings</h3>
+        <div class="find" id="findings"><div class="muted">—</div></div>
+      </div>
+      <div class="block" id="week">
+        <h3>This week vs the four before</h3>
+        <div class="card">
+          <p class="note">Upper bar: the last 7 days. Lower, grey bar: the 28 days before.</p>
+          <div class="wk" id="weekBars"></div>
+          <p class="note">Average of the last 7 days against the 28 days before them, from your daily values. Fewer days of data make the comparison weaker.</p>
+        </div>
+        <div class="card"><h3>Coach targets</h3><div id="targets" class="muted">—</div></div>
+      </div>
     </div>
   </section>
 
-  <section id="page-trends" data-page="trends" hidden>
-    <div class="charthead"><h2>Trends against your baseline</h2>
+  <section class="page" id="page-trends" data-page="trends" role="tabpanel" aria-labelledby="tab-trends" hidden>
+    <div class="pagehead">
+      <div><p class="eyebrow">Trends</p><h2>Against your baseline</h2></div>
       <div class="seg" id="rangeSeg" role="group" aria-label="Range">
-        <button type="button" data-days="7">7 d</button><button type="button" data-days="30" aria-pressed="true">30 d</button>
-        <button type="button" data-days="90">90 d</button><button type="button" data-days="365">365 d</button>
-      </div></div>
-    <p class="muted" style="margin:4px 0 10px">Dashed line: your personal baseline, once enough days exist. Hover a line for the day's value.</p>
+        <button type="button" data-days="7">7 d</button><button type="button" data-days="30" aria-pressed="true">30 d</button><button type="button" data-days="90">90 d</button><button type="button" data-days="365">365 d</button>
+      </div>
+    </div>
+    <p class="note" style="margin:-8px 0 16px">Solid line: your daily value. Dashed line: your personal baseline, once enough days exist. Hover a chart for the day's value.</p>
     <div class="grid" id="trendGrid"></div>
   </section>
 
-  <section id="page-sleep" data-page="sleep" hidden>
-    <h2>Sleep, last 14 nights</h2>
-    <div class="grid" style="margin-top:10px">
-      <div class="card" style="grid-column:1/-1"><div class="charthead"><h3>Nights by stage</h3>
-        <div class="legend"><span><i style="background:var(--sleep)"></i>Deep</span><span><i style="background:color-mix(in srgb,var(--sleep) 60%,var(--panel))"></i>REM</span><span><i style="background:color-mix(in srgb,var(--sleep) 30%,var(--panel))"></i>Light</span><span><i style="background:var(--faint)"></i>Awake</span></div></div>
+  <section class="page" id="page-sleep" data-page="sleep" role="tabpanel" aria-labelledby="tab-sleep" hidden>
+    <div class="pagehead"><div><p class="eyebrow">Sleep</p><h2>Last night and the 14 before</h2></div></div>
+    <div class="card" id="sleepHero"></div>
+    <div class="grid" style="margin-top:16px">
+      <div class="card wide"><div class="tcard-head"><h3>Nights by stage</h3>
+        <div class="legend"><span><i style="background:var(--sleep)"></i>Deep</span><span><i style="background:color-mix(in srgb,var(--sleep) 60%,var(--panel))"></i>REM</span><span><i style="background:color-mix(in srgb,var(--sleep) 30%,var(--panel))"></i>Light</span><span><i style="background:var(--muted)"></i>Awake</span></div></div>
         <div class="chart" id="stageChart"></div></div>
       <div class="card"><h3>Sleep score</h3><div class="chart" id="sleepScoreChart"></div></div>
       <div class="card"><h3>Sleep debt (7 nights)</h3><div class="chart" id="debtChart"></div></div>
@@ -218,30 +427,46 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     </div>
   </section>
 
-  <section id="page-activity" data-page="activity" hidden>
-    <h2>Activity &amp; weight</h2>
-    <div class="grid" style="margin-top:10px" id="actGrid"></div>
-    <div class="card" style="margin-top:10px"><h3>Workouts, last 30 days</h3><div class="tablewrap"><table id="sessTable"></table></div></div>
+  <section class="page" id="page-activity" data-page="activity" role="tabpanel" aria-labelledby="tab-activity" hidden>
+    <div class="pagehead"><div><p class="eyebrow">Activity</p><h2>Activity &amp; weight</h2></div></div>
+    <div class="hero2">
+      <div class="score" id="ring-steps"></div>
+      <div class="score" id="ring-mvpa"></div>
+    </div>
+    <div class="grid" id="actGrid"></div>
+    <div class="card" style="margin-top:16px"><h3>Workouts, last 30 days</h3><div class="tablewrap"><table id="sessTable"></table></div></div>
   </section>
 
-  <section id="page-running" data-page="running" hidden>
-    <h2>Running &amp; race</h2>
-    <div class="grid" style="margin-top:10px">
-      <div class="card stripe" id="planCard" style="grid-column:1/-1"></div>
+  <section class="page" id="page-running" data-page="running" role="tabpanel" aria-labelledby="tab-running" hidden>
+    <div class="pagehead"><div><p class="eyebrow">Running</p><h2>Running &amp; race</h2></div></div>
+    <div class="card race" id="planCard"></div>
+    <div class="card" style="margin-top:16px"><h3>Weekly distance, last 12 weeks</h3><div id="runWeeks"></div></div>
+    <div class="block">
+      <h3>Recent runs</h3>
+      <div class="runs" id="runCards"></div>
+      <p class="note" id="runNote"></p>
     </div>
-    <div class="card" style="margin-top:10px"><h3>Runs, last 90 days</h3><div class="tablewrap"><table id="runTable"></table></div>
-      <p class="faint" style="font-size:12px" id="runNote"></p></div>
+    <details class="card more" style="margin-top:16px"><summary id="runAllLabel">All runs, last 90 days</summary>
+      <div class="tablewrap"><table id="runTable"></table></div></details>
   </section>
 
-  <section id="page-bodyage" data-page="bodyage" hidden>
-    <h2>Body age</h2>
-    <div class="grid" style="margin-top:10px">
-      <div class="card" id="ageHead"></div>
-      <div class="card"><h3>What moves it most</h3><div id="ageLevers" style="margin-top:6px">—</div></div>
-      <div class="card" style="grid-column:1/-1"><div class="charthead"><h3>Components (years older or younger)</h3></div>
-        <div class="diverge" id="ageComps" style="margin-top:8px"></div></div>
+  <section class="page" id="page-bodyage" data-page="bodyage" role="tabpanel" aria-labelledby="tab-bodyage" hidden>
+    <div class="pagehead"><div><p class="eyebrow">Body age</p><h2>Body age</h2></div></div>
+    <div class="card" id="ageHead"></div>
+    <div class="agegrid">
+      <div class="card"><h3>What moves it most</h3><div id="ageLevers">—</div></div>
+      <div class="card"><h3>Components (years older or younger)</h3>
+        <div class="diverge-key" aria-hidden="true"><span></span><div><span>← younger</span><span>older →</span></div><span></span></div>
+        <div class="diverge" id="ageComps" style="margin-top:10px"></div></div>
     </div>
   </section>
+  </main>
+
+  <footer class="foot">
+    <p><strong>Not medical advice.</strong> These are estimates from your own wearable data and published research, not a diagnosis.
+      If a reading worries you, or you have symptoms, talk to a doctor.</p>
+    <p>An unofficial, open-source toolkit. Your data lives on your computer; this page shows it through Claude, or from a private snapshot stored in this Artifact.</p>
+  </footer>
 </div>
 
 <script>
@@ -276,12 +501,12 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
   const CFG = (() => { try { return faConfig(JSON.parse($cfg())); } catch (e) { return faConfig({}); } })();
   const TABS = CFG.tabs, TREND_METRICS = CFG.trend, TODAY_CARDS = CFG.cards, RANGE0 = CFG.range;
   const METRIC = {
-    "rhr": {label: "Resting HR", unit: "bpm", dp: 0, color: "--bad"},
+    "rhr": {label: "Resting HR", unit: "bpm", dp: 0, color: "--fg"},
     "hrv_7d": {label: "HRV (7-day)", unit: "ms", dp: 0, color: "--recovery"},
     "sleep_debt_h": {label: "Sleep debt", unit: "h", dp: 1, color: "--sleep"},
-    "steps_7d": {label: "Steps (7-day avg)", unit: "/day", dp: 0, color: "--recovery", ref: 7000, refLabel: "7,000"},
-    "mvpa_week": {label: "Brisk minutes", unit: "min/wk", dp: 0, color: "--recovery", band: [150, 300], refLabel: "WHO 150–300"},
-    "sedentary_h": {label: "Sedentary", unit: "h/day", dp: 1, color: "--warn", ref: 9.5, refLabel: "risk rises past ~9–10 h"},
+    "steps_7d": {label: "Steps (7-day avg)", unit: "/day", dp: 0, color: "--run", ref: 7000, refLabel: "7,000"},
+    "mvpa_week": {label: "Brisk minutes", unit: "min/wk", dp: 0, color: "--run", band: [150, 300], refLabel: "WHO 150–300"},
+    "sedentary_h": {label: "Sedentary", unit: "h/day", dp: 1, color: "--run", ref: 9.5, refLabel: "risk rises past ~9–10 h"},
     "weight_trend_kg": {label: "Weight trend", unit: "kg", dp: 1, color: "--age"},
     "score:recovery": {label: "Recovery score", unit: "", dp: 0, color: "--recovery"},
     "score:sleep": {label: "Sleep score", unit: "", dp: 0, color: "--sleep"},
@@ -298,6 +523,46 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
                 sleep_min: "Sleep", sri: "Sleep regularity", bmi: "BMI"};
   const LEVER = {steps_7000: "7,000 steps a day", rhr_minus_10: "Resting HR 10 bpm lower", rhr_to_floor: "Resting HR down to 60",
                  mvpa_150: "150 brisk minutes a week", bmi_minus_2: "BMI 2 points lower", vo2_plus_3_5: "VO2 max +3.5"};
+  // State colours always travel with a word, and every state comes from the payload or a registry threshold:
+  // recovery bands (analysis/recovery.py), score status, reason and confidence, race status (running.py), run spike
+  // classes, and the registry defaults below, read through the user's overrides with thr(). No band, no pill.
+  const SLEEP_DEBT_WATCH_H = 5, STEPS_BENCHMARK = 7000, MVPA_TARGET_MIN = 150;  // registry params of the same names
+  const SPIKE_TONE = {small: "plain", moderate: "warn", large: "bad"};
+  // fa:state-start (pure helpers; the tests run this block under node)
+  const BAND = {green: ["ok", "Good"], yellow: ["warn", "Caution"], red: ["bad", "Attention"]};
+  const PLAN_TONE = {on_track: "ok", tight: "warn", behind: "bad", no_runs_behind: "bad"};
+  const PLAN_WORD = {on_track: "On track", tight: "Tight", behind: "Behind", no_runs: "No runs yet", no_runs_behind: "Behind: no runs yet"};
+  const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  const has = (o, k) => !!o && Object.prototype.hasOwnProperty.call(o, k);
+  const scoreState = (s) => {
+    if (!s) return null;
+    if (s.value == null) return {tone: "", word: /baseline/.test(s.reason || "") ? "Building baseline" : "Not enough data"};
+    if (s.status === "provisional") return {tone: "", word: "Provisional"};
+    if (s.confidence != null && s.confidence < .5) return {tone: "", word: "Low confidence"};
+    if (s.status && s.status !== "ok") return {tone: "", word: cap(s.status.replace(/_/g, " "))};
+    if (s.band && has(BAND, s.band)) return {tone: BAND[s.band][0], word: BAND[s.band][1]};
+    return null;
+  };
+  // the ring's centre text when there is no value (null means: show the number)
+  const scoreCenter = (s) => s && s.value != null ? null : s && /baseline/.test(s.reason || "") ? "building" : "\u2014";
+  const planTone = (st) => has(PLAN_TONE, st) ? PLAN_TONE[st] : "";
+  const planWord = (st) => has(PLAN_WORD, st) ? PLAN_WORD[st] : cap(String(st || "").replace(/_/g, " "));
+  // as analysis/fitness.py advises: run-walk or a later race only when behind
+  const planAdvice = (pc, dateFmt) => {
+    const st = pc && pc.status;
+    if (st === "on_track") return "A gradual build of about 10% a week, with easier cutback weeks, reaches race distance in time.";
+    if (st === "tight") return "Tight but doable: keep increases to about 10% a week and keep the cutback weeks.";
+    if (st === "behind" || st === "no_runs_behind") {
+      return "Don't increase by more than about 10% a week to catch up. Consider run-walk on race day or a later race." +
+        (typeof pc.safe_by_race_km === "number" ? " Safe distance by race day: " + pc.safe_by_race_km.toFixed(1) + " km." : "");
+    }
+    if (st === "no_runs") return "No runs yet. Start with an easy run" + (pc.first_run_by ? " by " + dateFmt(pc.first_run_by) : " soon") + ".";
+    return "";
+  };
+  const threshold = (overrides, k, d) => { const o = has(overrides, k) ? overrides[k] : null; return o && typeof o.value === "number" ? o.value : d; };
+  // fa:state-end
+  const SEV_RANK = {alert: 0, watch: 1, info: 2};
+  const PAGE_SECTION = {today: "overview", trends: "trends", sleep: "sleep", activity: "activity", running: "running", bodyage: "bodyage"};
 
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
@@ -315,6 +580,13 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     if (h < 48) return Math.round(h) + " h ago";
     return Math.round(h / 24) + " days ago";
   };
+  const hm = (min) => { if (min == null) return "—"; const m = Math.round(min); return Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0") + " m"; };
+  const pill = (tone, word) => el("span", "pill " + (tone || "plain"), word);
+  const kvInto = (row, b, s) => { const d = el("div", "kv"); d.append(el("b", "num", b), el("span", null, s)); row.append(d); };
+  const zones = (x) => ({easy: ["z0_min", "z1_min", "z2_min"].reduce((a, k) => a + (x[k] || 0), 0),
+                         all: ["z0_min", "z1_min", "z2_min", "z3_min", "z4_min", "z5_min"].reduce((a, k) => a + (x[k] || 0), 0)});
+  const paceOf = (x) => x.pace_min_km ? Math.floor(x.pace_min_km) + ":" + String(Math.round((x.pace_min_km % 1) * 60)).padStart(2, "0") + " /km" : "—";
+  const motionOK = () => !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   const state = {
     mcp: null, db: null, perms: null,
@@ -323,6 +595,7 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     live: {}, liveErr: {},   // per section payload / error
     snap: null,
     tab: "today", day: null, range: RANGE0,
+    fresh: true, animNow: false,  // fills and count-ups run on the first render of a tab that has data
   };
 
   // ---------- data ----------
@@ -417,7 +690,7 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
 
   function renderHeader() {
     const chip = $("modeChip"), text = $("modeText");
-    chip.className = "chip " + (state.mode === "live" ? "live" : state.mode === "snapshot" ? "snap" : state.mode === "none" ? "off" : "");
+    chip.className = "chip " + (state.mode === "live" ? "live" : state.mode === "snapshot" ? "snap" : state.mode === "none" ? "off" : "conn");
     const snapAt = state.snap && state.snap.generated_at;
     text.textContent = state.mode === "live" ? "Live from your Mac"
       : state.mode === "snapshot" ? "Snapshot · " + (snapAt ? new Date(snapAt).toLocaleString("en", {weekday: "short", hour: "numeric", minute: "2-digit"}) : "")
@@ -429,9 +702,10 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
       line.textContent = (fr.last_sync_finished_utc ? "Last sync " + ago(fr.last_sync_finished_utc) : "No sync has finished yet") +
         (fr.stale ? " · data may be out of date" : " · data fresh") + (st.from === "snapshot" ? " (as of the snapshot)" : "");
       if (st.data.overrides && Object.keys(st.data.overrides).length) line.textContent += " · personal thresholds active";
-      line.style.color = fr.stale ? "var(--warn)" : "";
+      line.classList.toggle("stale", !!fr.stale);
     } else {
       line.textContent = state.mode === "connecting" ? "Loading your data…" : "";
+      line.classList.remove("stale");
     }
     const b = $("banner"); b.replaceChildren();
     if (state.mode !== "live" && state.mode !== "connecting") {
@@ -458,23 +732,59 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
   // ---------- small svg kit ----------
   const NS = "http://www.w3.org/2000/svg";
   const svg = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+  let gradSeq = 0;
 
-  function ring(host, {value, max = 100, color, center, label, sub, muted}) {
+  function countUp(node, to, dp, i) {
+    // the final text is already in place; this only animates towards it on a fresh view with motion allowed
+    if (!state.animNow || to == null || !Number.isFinite(Number(to))) return;
+    const final = node.textContent, t0 = performance.now() + (i || 0) * 60, D = 900;
+    node.textContent = fmt(0, dp);
+    const step = (now) => {
+      const t = Math.min(1, Math.max(0, (now - t0) / D)), e = 1 - Math.pow(1 - t, 4);
+      node.textContent = t >= 1 ? final : fmt(Number(to) * e, dp);
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  function positionTip(tip, x, box) {
+    tip.hidden = false;
+    const w = tip.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(x - w / 2, box.width - w)) + "px";
+    tip.style.top = "0px";
+  }
+
+  // One ring per score, open at the bottom, filled clockwise; the number sits inside, the label and state beside it.
+  function ring(host, {value, max = 100, color, center, label, sub, muted, state: st, i = 0}) {
     host.replaceChildren();
     host.classList.toggle("muted", !!muted);
-    const s = svg("svg", {viewBox: "0 0 120 120", role: "img", "aria-label": label + " " + center});
-    const r = 50, c = 2 * Math.PI * r;
-    s.append(svg("circle", {cx: 60, cy: 60, r, fill: "none", stroke: css("--track"), "stroke-width": 10}));
+    const G = 0.18, r = 52, c = 2 * Math.PI * r, L = c * (1 - G);
+    const common = {cx: 60, cy: 60, r, fill: "none", "stroke-width": 10, "stroke-linecap": "round", "stroke-dasharray": `${L} ${c}`,
+                    transform: `rotate(${90 + G * 180} 60 60)`};
+    const s = svg("svg", {viewBox: "0 0 120 120", "aria-hidden": "true", focusable: "false"});
+    s.append(svg("circle", Object.assign({stroke: css("--track")}, common)));
     const f = value == null ? 0 : Math.max(0, Math.min(1, value / max));
-    const arc = svg("circle", {class: "arc", cx: 60, cy: 60, r, fill: "none", stroke: css(color), "stroke-width": 10, "stroke-linecap": "round",
-                               "stroke-dasharray": c, "stroke-dashoffset": c * (1 - f), transform: "rotate(-90 60 60)"});
-    s.append(arc);
-    const t = svg("text", {x: 60, y: center.length > 4 ? 66 : 70, "text-anchor": "middle", fill: css("--fg"),
-                           "font-family": "Saira Condensed, Arial Narrow, sans-serif", "font-weight": 600, "font-size": center.length > 4 ? 18 : 34});
-    t.textContent = center;
-    s.append(t);
-    host.append(s, el("div", "label", label), el("div", "sub", sub || ""));
+    const final = L * (1 - f);
+    const arc = svg("circle", Object.assign({class: "arc", stroke: css(color)}, common));
+    arc.style.strokeDashoffset = state.animNow ? L : final;
+    arc.style.setProperty("--i", i);
+    if (f > 0) s.append(arc);
+    const len = String(center).length;
+    const num = el("div", "score-num num" + (len > 5 ? " small" : len > 3 ? " mid" : ""), center);
+    const box = el("div", "ringbox"); box.append(s, num);
+    const meta = el("div", "meta");
+    meta.append(el("div", "label", label));
+    if (st) meta.append(pill(st.tone, st.word));
+    if (sub) meta.append(el("div", "sub", sub));
+    host.append(box, meta);
+    if (state.animNow && f > 0) {
+      requestAnimationFrame(() => requestAnimationFrame(() => { arc.style.strokeDashoffset = final; }));
+      if (value != null && center === fmt(value)) countUp(num, value, 0, i);
+    }
   }
+
+  const thr = (k, d) => threshold((section("status").data || {}).overrides, k, d);  // the user's own threshold wins
+  const goalState = (v, goal, met) => v == null ? null : v >= goal ? {tone: "ok", word: met} : {tone: "", word: fmt(goal - v) + " to go"};
 
   function lineChart(host, rows, {color, ref, band, dp = 0, unit = "", yLabel}) {
     host.replaceChildren();
@@ -491,26 +801,37 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     const x0 = Math.min(...xs), x1 = Math.max(...xs) === x0 ? x0 + 86400000 : Math.max(...xs);
     const X = (t) => m.l + (t - x0) / (x1 - x0) * (W - m.l - m.r);
     const Y = (v) => H - m.b - (v - lo) / (hi - lo) * (H - m.t - m.b);
-    const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, width: "100%"});
+    const last = pts[pts.length - 1];
+    const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img",
+      "aria-label": (yLabel ? yLabel + ": " : "") + pts.length + " days, latest " + fmt(last.v, dp) + (unit ? " " + unit : "") +
+                    (last.b != null ? ", baseline " + fmt(last.b, dp) : "")});
+    const col = css(color), gid = "fa-g" + (++gradSeq);
+    const defs = svg("defs", {}), lg = svg("linearGradient", {id: gid, x1: 0, y1: 0, x2: 0, y2: 1});
+    lg.append(svg("stop", {offset: "0%", "stop-color": col, "stop-opacity": .22}), svg("stop", {offset: "100%", "stop-color": col, "stop-opacity": 0}));
+    defs.append(lg); s.append(defs);
     const ticks = [lo + pad, (lo + hi) / 2, hi - pad];
     for (const tv of ticks) {
       s.append(svg("line", {x1: m.l, x2: W - m.r, y1: Y(tv), y2: Y(tv), stroke: css("--line"), "stroke-width": 1}));
-      const tl = svg("text", {x: m.l - 6, y: Y(tv) + 4, "text-anchor": "end", fill: css("--muted"), "font-size": 11, "font-family": "IBM Plex Sans, sans-serif"});
+      const tl = svg("text", {x: m.l - 8, y: Y(tv) + 4, "text-anchor": "end", fill: css("--muted")});
       tl.textContent = fmt(tv, Math.abs(hi - lo) < 10 ? Math.max(dp, 1) : 0); s.append(tl);
     }
     if (band) s.append(svg("rect", {x: m.l, width: W - m.l - m.r, y: Y(band[1]), height: Math.max(0, Y(band[0]) - Y(band[1])),
                                     fill: css("--ok"), opacity: .1}));
     if (ref != null) s.append(svg("line", {x1: m.l, x2: W - m.r, y1: Y(ref), y2: Y(ref), stroke: css("--muted"), "stroke-width": 1, "stroke-dasharray": "2 4"}));
+    if (pts.length > 1) {
+      const line = pts.map((p, i) => `${X(xs[i])},${Y(p.v)}`);
+      s.append(svg("path", {d: `M${line.join(" L")} L${X(xs[xs.length - 1])},${H - m.b} L${X(xs[0])},${H - m.b} Z`, fill: `url(#${gid})`}));
+    }
     const bpts = pts.filter((p) => p.b != null);
     if (bpts.length > 1) s.append(svg("polyline", {fill: "none", stroke: css("--muted"), "stroke-width": 1.5, "stroke-dasharray": "5 4",
       points: bpts.map((p) => `${X(new Date(p.d + "T12:00:00").getTime())},${Y(p.b)}`).join(" ")}));
-    const col = css(color);
     if (pts.length > 1) s.append(svg("polyline", {fill: "none", stroke: col, "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round",
       points: pts.map((p, i) => `${X(xs[i])},${Y(p.v)}`).join(" ")}));
-    pts.forEach((p, i) => s.append(svg("circle", {cx: X(xs[i]), cy: Y(p.v), r: i === pts.length - 1 ? 3.5 : 2, fill: col})));
-    const lab = (t, x, anchor) => { const e = svg("text", {x, y: H - 5, "text-anchor": anchor, fill: css("--muted"), "font-size": 11, "font-family": "IBM Plex Sans, sans-serif"}); e.textContent = t; s.append(e); };
-    lab(shortDay(pts[0].d), m.l, "start"); if (pts.length > 1) lab(shortDay(pts[pts.length - 1].d), W - m.r, "end");
-    const hover = svg("line", {y1: m.t, y2: H - m.b, stroke: css("--faint"), "stroke-width": 1, visibility: "hidden"});
+    if (pts.length <= 31) pts.forEach((p, i) => { if (i < pts.length - 1) s.append(svg("circle", {cx: X(xs[i]), cy: Y(p.v), r: 2, fill: col})); });
+    s.append(svg("circle", {cx: X(xs[xs.length - 1]), cy: Y(last.v), r: 4, fill: col, stroke: css("--panel"), "stroke-width": 2}));
+    const lab = (t, x, anchor) => { const e = svg("text", {x, y: H - 5, "text-anchor": anchor, fill: css("--muted")}); e.textContent = t; s.append(e); };
+    lab(shortDay(pts[0].d), m.l, "start"); if (pts.length > 1) lab(shortDay(last.d), W - m.r, "end");
+    const hover = svg("line", {y1: m.t, y2: H - m.b, stroke: css("--muted"), "stroke-width": 1, visibility: "hidden"});
     s.append(hover);
     const tip = el("div", "tip"); tip.hidden = true;
     s.addEventListener("pointermove", (ev) => {
@@ -519,8 +840,7 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
       const p = pts[best]; hover.setAttribute("x1", X(xs[best])); hover.setAttribute("x2", X(xs[best])); hover.setAttribute("visibility", "visible");
       tip.replaceChildren(el("span", "k", shortDay(p.d) + "  "), document.createTextNode(fmt(p.v, dp) + (unit ? " " + unit : "")),
         ...(p.b != null ? [el("span", "k", "  · baseline " + fmt(p.b, dp))] : []));
-      tip.hidden = false;
-      const left = X(xs[best]) / W * box.width; tip.style.left = Math.min(Math.max(0, left - 60), box.width - 150) + "px"; tip.style.top = "0px";
+      positionTip(tip, X(xs[best]) / W * box.width, box);
     });
     s.addEventListener("pointerleave", () => { tip.hidden = true; hover.setAttribute("visibility", "hidden"); });
     host.append(s, tip);
@@ -558,9 +878,13 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     $("dayNext").disabled = !state.day || state.day >= todayIso() || state.mode !== "live";
     $("dayPrev").disabled = state.mode !== "live";
     const safety = $("safety"); safety.replaceChildren();
-    const rings = ["ring-recovery", "ring-sleep", "ring-age"].map($);
+    const rings = ["ring-recovery", "ring-sleep", "ring-activity"].map($);
+    const call = $("todayCall");
     if (!ov.data) {
-      rings.forEach((r) => r.replaceChildren(el("div", "muted", "—")));
+      const wait = ov.pending ? "Loading…" : "Not available";
+      [["Recovery", "--recovery"], ["Sleep", "--sleep"], ["Activity", "--run"]].forEach(([label, color], i) =>
+        ring(rings[i], {value: null, color, center: "—", label, sub: wait, muted: true}));
+      call.hidden = true;
       errorBox($("findings"), ov, "findings"); $("todayCards").replaceChildren(); renderWeek(); return;
     }
     const o = ov.data;
@@ -571,28 +895,46 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     });
     const sc = Object.fromEntries((o.scores || []).map((s) => [s.score, s]));
     const weak = (s) => !s || s.value == null || s.status !== "ok" || (s.confidence != null && s.confidence < .5);
+    const m = o.metrics || {};
     const rec = sc.recovery;
-    ring(rings[0], {value: rec && rec.value, color: "--recovery", label: "Recovery",
-      center: rec && rec.value != null ? fmt(rec.value) : "building",
+    ring(rings[0], {value: rec && rec.value, color: "--recovery", label: "Recovery", i: 0, state: scoreState(rec),
+      center: rec && rec.value != null ? fmt(rec.value) : scoreCenter(rec),
       sub: rec ? (rec.value != null ? "confidence " + pct(rec.confidence) : (rec.reason || rec.status).replace(/_/g, " ")) : "—", muted: weak(rec)});
     const sl = sc.sleep;
-    ring(rings[1], {value: sl && sl.value, color: "--sleep", label: "Sleep", center: sl && sl.value != null ? fmt(sl.value) : "—",
+    ring(rings[1], {value: sl && sl.value, color: "--sleep", label: "Sleep", i: 1, state: scoreState(sl), center: sl && sl.value != null ? fmt(sl.value) : scoreCenter(sl),
       sub: sl ? (sl.value != null ? "confidence " + pct(sl.confidence) : (sl.reason || sl.status).replace(/_/g, " ")) : "—", muted: weak(sl)});
+    const mvpaMin = thr("mvpa_target_min", MVPA_TARGET_MIN);
+    ring(rings[2], {value: m.mvpa_week, max: mvpaMin, color: "--run", label: "Activity", i: 2,
+      state: goalState(m.mvpa_week, mvpaMin, "Guideline met"),
+      center: m.mvpa_week != null ? fmt(m.mvpa_week) : "—", sub: "brisk min/week (last 7 days) · guideline " + fmt(mvpaMin), muted: m.mvpa_week == null});
     const ba = sc.body_age, bac = (ba && ba.components) || {};
-    const age = bac.age, bav = ba && ba.value;
-    ring(rings[2], {value: bav != null && age ? 20 + (age - bav) : null, max: 40, color: bav != null && age && bav <= age ? "--ok" : "--age",
-      label: "Body age", center: bav != null ? fmt(bav) : "—",
-      sub: ba ? (bav != null ? (bac.display || "").replace(/^\S+\s*/, "") + (age ? " · you're " + age : "") + (ba.status === "provisional" ? " · provisional" : "") : (ba.reason || ba.status).replace(/_/g, " ")) : "—",
-      muted: ba && ba.status !== "ok"});
+    const bav = ba && ba.value;
 
-    const m = o.metrics || {};
+    // Today's call: the most pressing finding, with the day's scores in one line.
+    const ins = (o.insights || []).filter((i) => i.kind !== "safety");
+    const top = ins.slice().sort((a, b) => (own(SEV_RANK, a.severity) ? SEV_RANK[a.severity] : 3) - (own(SEV_RANK, b.severity) ? SEV_RANK[b.severity] : 3))[0];
+    const rs = scoreState(rec);
+    const bits = [];
+    if (rec && rec.value != null) bits.push("Recovery " + fmt(rec.value) + (rs ? " (" + rs.word.toLowerCase() + ")" : ""));
+    if (sl && sl.value != null) bits.push("sleep score " + fmt(sl.value));
+    if (m.sleep_debt_h != null) bits.push(fmt(m.sleep_debt_h, 1) + " h sleep debt");
+    if (ins.length) bits.push(ins.length + (ins.length > 1 ? " findings" : " finding") + " below");
+    call.replaceChildren(el("p", "eyebrow", "Today's call"),
+      el("h3", "callh", (o.safety || []).length ? "Safety first: read the alert above." : top ? top.title : "Nothing flagged today."),
+      el("p", "muted", bits.join(" · ")));
+    call.hidden = false;
+
     const cards = $("todayCards"); cards.replaceChildren();
     const card = (key, cls, tab, title, big, lines) => {
       if (TODAY_CARDS && !TODAY_CARDS.includes(key)) return;
       const linked = TABS.includes(tab);  // a card whose tab is hidden is plain text, not a link
-      const c = el("div", "card stripe " + (linked ? "cardlink " : "") + (cls || ""));
+      const c = el("div", "tile" + (linked ? " cardlink" : ""));
       if (linked) { c.tabIndex = 0; c.setAttribute("role", "link"); }
-      c.append(el("h3", null, title)); if (big != null) c.append(el("div", "big num", big));
+      const head = el("div", "tile-head"); head.append(el("h3", null, title));
+      if (cls && cls.word) head.append(pill(cls.tone, cls.word));  // only a state the payload or registry gives
+      if (linked) { const go = el("span", "go", "›"); go.setAttribute("aria-hidden", "true"); head.append(go); }
+      c.append(head);
+      if (big != null) c.append(el("div", "big num", big));
       lines.forEach((l) => c.append(el("p", "muted", l)));
       if (linked) {
         const go = () => selectTab(tab); c.addEventListener("click", go); c.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
@@ -601,21 +943,23 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     };
     const rn = section("running"), plan = rn.data && rn.data.plan, pc = plan && plan.components;
     if (pc && pc.status === "no_race") {
-      card("plan", "", "running", "Race plan", "No race configured", noRaceLines(pc));
+      card("plan", null, "running", "Race plan", "No race configured", noRaceLines(pc));
     } else if (pc) {
       const st = pc.status || plan.status;
-      card("plan", st === "on_track" ? "ok" : st === "tight" ? "warn" : "bad", "running", (pc.race_km || 10) + " km plan", st.replace(/_/g, " "),
+      card("plan", null, "running", (pc.race_km || 10) + " km plan", planWord(st),  // the status word is the value
         [pc.weeks_short ? "About " + pc.weeks_short + " weeks short of a gradual build" : pc.weeks_left != null ? pc.weeks_left + " weeks to race day" : "",
          pc.safe_by_race_km != null ? "Safe by race day: " + fmt(pc.safe_by_race_km, 1) + " km" : ""].filter(Boolean));
     }
-    if (m.sleep_debt_h != null) card("sleep_debt", m.sleep_debt_h >= 5 ? "warn" : "ok", "sleep", "Sleep debt", fmt(m.sleep_debt_h, 1) + " h", ["Over the last 7 nights"]);
-    card("activity", "", "activity", "Activity", m.steps_7d != null ? fmt(m.steps_7d) : "—",
+    const debtWatch = thr("sleep_debt_watch_h", SLEEP_DEBT_WATCH_H);
+    if (m.sleep_debt_h != null) card("sleep_debt", m.sleep_debt_h >= debtWatch ? {tone: "warn", word: "Watch: " + fmt(debtWatch, debtWatch % 1 ? 1 : 0) + " h or more"} : null,
+      "sleep", "Sleep debt", fmt(m.sleep_debt_h, 1) + " h", ["Over the last 7 nights"]);
+    card("activity", null, "activity", "Activity", m.steps_7d != null ? fmt(m.steps_7d) : "—",
       ["steps a day (7-day)", (m.mvpa_week != null ? fmt(m.mvpa_week) + " brisk min/week" : "") + (m.sedentary_h != null ? " · sedentary " + fmt(m.sedentary_h, 1) + " h/day" : "")]);
-    card("body", "", "bodyage", "Body", m.rhr != null ? fmt(m.rhr) + " bpm" : "—",
-      ["resting HR", (m.weight_trend_kg != null ? fmt(m.weight_trend_kg, 1) + " kg" : "no recent weigh-in") + (m.bmi != null ? " · BMI " + fmt(m.bmi, 1) : "")]);
+    card("body", null, "bodyage", "Body", m.rhr != null ? fmt(m.rhr) + " bpm" : "—",
+      ["resting HR", (m.weight_trend_kg != null ? fmt(m.weight_trend_kg, 1) + " kg" : "no recent weigh-in") + (m.bmi != null ? " · BMI " + fmt(m.bmi, 1) : ""),
+       ...(bav != null ? ["Body age " + (bac.display || fmt(bav)) + (ba.status === "provisional" ? " · provisional" : "")] : [])]);
 
     const f = $("findings"); f.replaceChildren();
-    const ins = (o.insights || []).filter((i) => i.kind !== "safety");
     if (!ins.length) f.append(el("div", "muted", "No findings for this day."));
     ins.forEach((i) => {
       const it = el("div", "item");
@@ -627,35 +971,43 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
   }
 
   function renderWeek() {
-    const t = $("weekTable"); t.replaceChildren();
+    const t = $("weekBars"); t.replaceChildren();
     const tr = section("trends");
     const series = tr.data && tr.data.series;
-    const head = el("tr"); ["Metric", "Last 7 d", "28 d before", "Change"].forEach((h, i) => head.append(el("th", i ? "r" : null, h)));
-    t.append(head);
-    if (!series) { const r = el("tr"); const c = el("td", "muted", "Trends not loaded yet"); c.colSpan = 4; r.append(c); t.append(r); }
+    if (!series) t.append(el("p", "muted", "Trends not loaded yet"));
     else {
       const end = tr.data.end, cut = isoAdd(end, -6), cut2 = isoAdd(end, -34);
       const avg = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+      let n = 0;
       for (const k of TREND_METRICS) {
         const rows = (series[k] || []).filter((r) => r.value != null);
         const a = avg(rows.filter((r) => r.date >= cut).map((r) => r.value));
         const b = avg(rows.filter((r) => r.date < cut && r.date >= cut2).map((r) => r.value));
         if (a == null) continue;
-        const meta = metricMeta(k), r = el("tr");
-        r.append(el("td", null, meta.label), el("td", "r", fmt(a, meta.dp) + (meta.unit ? " " + meta.unit : "")),
-                 el("td", "r muted", b == null ? "—" : fmt(b, meta.dp)), el("td", "r", b == null ? "—" : (a - b >= 0 ? "+" : "") + fmt(a - b, meta.dp)));
-        t.append(r);
+        const meta = metricMeta(k), row = el("div", "wkrow");
+        const most = Math.max(Math.abs(a), Math.abs(b == null ? 0 : b)) || 1;
+        const bars = el("div", "wkbars"); bars.setAttribute("aria-hidden", "true");
+        const bar = (v, cls) => {
+          const s = el("span", "wkbar " + cls), i = el("i", "grow");
+          i.style.width = (v == null ? 0 : Math.abs(v) / most * 100) + "%"; i.style.setProperty("--i", n);
+          if (cls === "now") i.style.background = `var(${meta.color})`;
+          s.append(i); bars.append(s);
+        };
+        bar(a, "now"); bar(b, "prev");
+        const val = el("div", "wkval");
+        val.append(el("b", "num", fmt(a, meta.dp) + (meta.unit ? " " + meta.unit : "")),
+                   el("span", "num", b == null ? "no earlier data" : "was " + fmt(b, meta.dp) + " · " + (a - b >= 0 ? "+" : "") + fmt(a - b, meta.dp)));
+        row.append(el("div", "wkname", meta.label), bars, val);
+        t.append(row); n++;
       }
-      if (state.range < 30 && state.mode === "live") {
-        const r = el("tr"); const c = el("td", "faint", "Pick 30 d or more on Trends for the full 28-day comparison."); c.colSpan = 4; r.append(c); t.append(r);
-      }
+      if (state.range < 30 && state.mode === "live") t.append(el("p", "note", "Pick 30 d or more on Trends for the full 28-day comparison."));
     }
     const tg = $("targets"); tg.replaceChildren();
     const ts = section("targets");
     const notes = ts.data && ts.data.notes;
     if (!notes) tg.append(el("span", null, ts.pending ? "Loading…" : "Not available"));
     else if (!notes.length) tg.append(el("span", null, "No active targets. Ask the coach for a weekly review to set some."));
-    else notes.forEach((n) => { const p = el("p"); p.append(el("span", "sev", n.kind), document.createTextNode(" " + n.text + (n.review_on ? " · review " + shortDay(n.review_on) : ""))); tg.append(p); });
+    else notes.forEach((n) => { const p = el("p"); p.append(pill("", n.kind), el("span", null, n.text + (n.review_on ? " · review " + shortDay(n.review_on) : ""))); p.lastChild.style.color = "var(--fg)"; tg.append(p); });
   }
 
   function renderTrends() {
@@ -668,25 +1020,72 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     });
     const g = $("trendGrid"); g.replaceChildren();
     if (!tr.data) { errorBox(g, tr, "trends"); return; }
-    for (const k of TREND_METRICS) {
-      const meta = metricMeta(k), c = el("div", "card");
-      const rows = tr.data.series[k] || [];
-      const last = [...rows].reverse().find((r) => r.value != null);
-      const head = el("div", "charthead"); head.append(el("h3", null, meta.label),
-        el("span", "num", last ? fmt(last.value, meta.dp) + (meta.unit ? " " + meta.unit : "") : "—"));
-      const ch = el("div", "chart"); c.append(head, ch);
-      if (meta.refLabel) c.append(el("p", "faint", "Reference: " + meta.refLabel));
-      if (meta.desc) c.append(el("p", "faint", meta.desc));
-      g.append(c);
-      requestAnimationFrame(() => lineChart(ch, rows, {color: meta.color, ref: meta.ref, band: meta.band, dp: meta.dp, unit: meta.unit}));
+    for (const k of TREND_METRICS) g.append(trendCard(k, tr.data.series[k] || [], []));
+  }
+
+  // One trend card (Trends and Activity): label, latest value large, baseline, the chart, then notes.
+  function trendCard(k, rows, extra) {
+    const meta = metricMeta(k), c = el("div", "card");
+    const last = [...rows].reverse().find((r) => r.value != null);
+    const head = el("div", "tcard-head"); head.append(el("h3", null, meta.label));
+    if (last && last.baseline != null) head.append(el("span", "note num", "baseline " + fmt(last.baseline, meta.dp)));
+    const val = el("div", "tval"); val.append(el("span", "num", last ? fmt(last.value, meta.dp) : "—"));
+    if (last && meta.unit) val.append(el("span", "unit", meta.unit));
+    const ch = el("div", "chart"); c.append(head, val, ch);
+    if (meta.refLabel) c.append(el("p", "note", "Reference: " + meta.refLabel));
+    if (meta.desc) c.append(el("p", "note", meta.desc));
+    extra.forEach((t) => c.append(el("p", "note", t)));
+    requestAnimationFrame(() => lineChart(ch, rows, {color: meta.color, ref: meta.ref, band: meta.band, dp: meta.dp, unit: meta.unit, yLabel: meta.label}));
+    return c;
+  }
+
+  function renderSleepHero(host, data, nights) {
+    host.replaceChildren();
+    const mains = nights.filter((n) => !n.nap);
+    const n = mains[mains.length - 1];
+    if (!n) { host.append(el("p", "muted", "No main sleep in the last 14 nights yet.")); return; }
+    const scored = (data.scores || []).filter((s) => s.value != null);
+    const sc = scored[scored.length - 1];
+    const wrap = el("div", "sleephero");
+    const main = el("div", "sh-main");
+    const tot = (n.deep_min || 0) + (n.rem_min || 0) + (n.light_min || 0) + (n.awake_min || 0);
+    main.append(el("p", "eyebrow", "Asleep · woke " + dayFmt(n.wake_date)), el("div", "hero-num num", hm(n.asleep_min)),
+      el("p", "muted num", (n.bed_local ? n.bed_local.slice(11, 16) : "?") + " → " + (n.wake_local ? n.wake_local.slice(11, 16) : "?") +
+        " · " + fmt(n.awake_min || 0) + " min awake"));
+    if (tot) {
+      const base = "var(--sleep)", mix = (p) => `color-mix(in srgb, var(--sleep) ${p}%, var(--panel))`;
+      const parts = [["Deep", "deep_min", base], ["REM", "rem_min", mix(60)], ["Light", "light_min", mix(30)], ["Awake", "awake_min", "var(--muted)"]];
+      const bar = el("div", "stagebar grow"); bar.setAttribute("aria-hidden", "true");
+      const legend = el("div", "legend");
+      parts.forEach(([name, k, col]) => {
+        const v = n[k] || 0; if (!v) return;
+        const seg = el("i"); seg.style.flex = String(v); seg.style.background = col; bar.append(seg);
+        const item = el("span"); const sw = el("i"); sw.style.background = col; item.append(sw, document.createTextNode(name + " " + hm(v))); legend.append(item);
+      });
+      main.append(bar, legend);
     }
+    const rb = el("div", "score flat sh-ring");
+    ring(rb, {value: sc && sc.value, color: "--sleep", label: "Sleep score", center: sc ? fmt(sc.value) : "—", state: scoreState(sc),
+      sub: sc ? (sc.date === n.wake_date ? "last night" : "from " + shortDay(sc.date)) : "not scored yet",
+      muted: !sc || (sc.confidence != null && sc.confidence < .5)});
+    const sub = (sc && sc.subscores) || {};
+    const sriVals = Object.values(data.sri || {});
+    const sri = sc && sc.sri != null ? sc.sri : sriVals.length ? sriVals[sriVals.length - 1] : null;
+    const kvs = el("div", "kv3 sh-kv");
+    const kv = (b, s) => kvInto(kvs, b, s);
+    kv(pct(n.efficiency), "efficiency" + (sub.efficiency != null ? " · score " + fmt(sub.efficiency) : ""));
+    kv(fmt(sri), "regularity (SRI)" + (sub.regularity != null ? " · score " + fmt(sub.regularity) : ""));
+    kv(sub.timing != null ? fmt(sub.timing) : "—", "timing score (of 100)");
+    wrap.append(main, rb, kvs);
+    host.append(wrap);
   }
 
   function renderSleep() {
     const sec = section("sleep");
-    const stage = $("stageChart"), score = $("sleepScoreChart"), debt = $("debtChart"), sri = $("sriBox");
-    if (!sec.data) { [stage, score, debt, sri].forEach((h) => errorBox(h, sec, "sleep data")); return; }
+    const hero = $("sleepHero"), stage = $("stageChart"), score = $("sleepScoreChart"), debt = $("debtChart"), sri = $("sriBox");
+    if (!sec.data) { [hero, stage, score, debt, sri].forEach((h) => errorBox(h, sec, "sleep data")); return; }
     const nights = sec.data.nights || [];
+    renderSleepHero(hero, sec.data, nights);
     stage.replaceChildren();
     if (!nights.length) stage.append(el("div", "empty", "No nights in this range"));
     else {
@@ -695,10 +1094,10 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
       const maxH = Math.max(8, ...nights.map((n) => tot(n) / 60));
       const bw = Math.min(32, (W - m.l - m.r) / nights.length * .7), step = (W - m.l - m.r) / nights.length;
       const Y = (h) => H - m.b - h / maxH * (H - m.t - m.b);
-      const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, width: "100%"});
+      const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, width: "100%", role: "img", "aria-label": "Sleep stages for " + nights.length + " nights"});
       [0, 4, 8].filter((h) => h <= maxH).forEach((h) => {
         s.append(svg("line", {x1: m.l, x2: W - m.r, y1: Y(h), y2: Y(h), stroke: css("--line")}));
-        const t = svg("text", {x: m.l - 6, y: Y(h) + 4, "text-anchor": "end", "font-size": 11, fill: css("--muted"), "font-family": "IBM Plex Sans, sans-serif"}); t.textContent = h + " h"; s.append(t);
+        const t = svg("text", {x: m.l - 6, y: Y(h) + 4, "text-anchor": "end", fill: css("--muted")}); t.textContent = h + " h"; s.append(t);
       });
       const base = css("--sleep"), pnl = css("--panel");
       const mix = (p) => `color-mix(in srgb, ${base} ${p}%, ${pnl})`;
@@ -706,66 +1105,68 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
       nights.forEach((n, i) => {
         const x = m.l + i * step + (step - bw) / 2;
         let y0 = 0;
-        [["deep_min", base], ["rem_min", mix(60)], ["light_min", mix(30)], ["awake_min", css("--faint")]].forEach(([k, col]) => {
+        const g = svg("g", {class: "grow-y"}); g.style.setProperty("--i", i);
+        [["deep_min", base], ["rem_min", mix(60)], ["light_min", mix(30)], ["awake_min", css("--muted")]].forEach(([k, col]) => {
           const h = (n[k] || 0) / 60; if (!h) return;
-          const r = svg("rect", {x, width: bw, y: Y(y0 + h), height: Math.max(0, Y(y0) - Y(y0 + h)), rx: 3});
-          r.style.fill = col; if (n.nap) r.setAttribute("opacity", ".55"); s.append(r); y0 += h;
+          const r = svg("rect", {x, width: bw, y: Y(y0 + h), height: Math.max(0, Y(y0) - Y(y0 + h) - 1), rx: 3});
+          r.style.fill = col; if (n.nap) r.setAttribute("opacity", ".55"); g.append(r); y0 += h;
         });
+        s.append(g);
         const hit = svg("rect", {x: m.l + i * step, width: step, y: m.t, height: H - m.t - m.b, fill: "transparent"});
         hit.addEventListener("pointerenter", () => {
           tip.replaceChildren(el("span", "k", shortDay(n.wake_date) + (n.nap ? " nap  " : "  ")),
             document.createTextNode(fmt((n.asleep_min || 0) / 60, 1) + " h asleep · deep " + fmt(n.deep_min) + " · REM " + fmt(n.rem_min) + " min"));
-          tip.hidden = false; const box = s.getBoundingClientRect();
-          tip.style.left = Math.min(Math.max(0, (x / W) * box.width - 80), box.width - 240) + "px"; tip.style.top = "0px";
+          const box = s.getBoundingClientRect();
+          positionTip(tip, ((x + bw / 2) / W) * box.width, box);
         });
         hit.addEventListener("pointerleave", () => { tip.hidden = true; });
         s.append(hit);
         if (i === 0 || i === nights.length - 1 || nights.length <= 8) {
-          const t = svg("text", {x: x + bw / 2, y: H - 6, "text-anchor": "middle", "font-size": 10, fill: css("--muted"), "font-family": "IBM Plex Sans, sans-serif"});
+          const t = svg("text", {x: x + bw / 2, y: H - 6, "text-anchor": i === 0 && nights.length > 8 ? "start" : i === nights.length - 1 && nights.length > 8 ? "end" : "middle", fill: css("--muted")});
           t.textContent = shortDay(n.wake_date); s.append(t);
         }
       });
       stage.append(s, tip);
     }
-    lineChart(score, (sec.data.scores || []).map((r) => ({date: r.date, value: r.value})), {color: "--sleep", dp: 0});
-    lineChart(debt, Object.entries(sec.data.debt_h || {}).map(([d, v]) => ({date: d, value: v})), {color: "--warn", dp: 1, unit: "h"});
+    lineChart(score, (sec.data.scores || []).map((r) => ({date: r.date, value: r.value})), {color: "--sleep", dp: 0, yLabel: "Sleep score"});
+    lineChart(debt, Object.entries(sec.data.debt_h || {}).map(([d, v]) => ({date: d, value: v})), {color: "--sleep", dp: 1, unit: "h", yLabel: "Sleep debt"});
     sri.replaceChildren();
     const sv = Object.entries(sec.data.sri || {});
     if (!sv.length) sri.append(el("p", "muted", "Not enough consecutive nights yet. Regularity needs about a week of nightly wear."));
     else {
       const [d, v] = sv[sv.length - 1];
-      sri.append(el("div", "big num", fmt(v)), el("p", "muted", "on " + shortDay(d) + " · −100 to 100, 100 = identical sleep and wake times every day"));
+      sri.append(el("div", "big num", fmt(v)), el("p", "note", "on " + shortDay(d) + " · −100 to 100, 100 = identical sleep and wake times every day"));
     }
   }
 
   function renderActivity() {
     const g = $("actGrid"); g.replaceChildren();
+    const ov = section("overview"), m = (ov.data && ov.data.metrics) || {};
+    const stepsBench = thr("steps_benchmark", STEPS_BENCHMARK), mvpaMin = thr("mvpa_target_min", MVPA_TARGET_MIN);
+    ring($("ring-steps"), {value: m.steps_7d, max: stepsBench, color: "--run", label: "Steps", i: 0,
+      state: goalState(m.steps_7d, stepsBench, "Benchmark met"),
+      center: m.steps_7d != null ? fmt(m.steps_7d) : "—", sub: "a day, 7-day average · benchmark " + fmt(stepsBench), muted: m.steps_7d == null});
+    ring($("ring-mvpa"), {value: m.mvpa_week, max: mvpaMin, color: "--run", label: "Brisk minutes", i: 1,
+      state: goalState(m.mvpa_week, mvpaMin, "Guideline met"),
+      center: m.mvpa_week != null ? fmt(m.mvpa_week) : "—", sub: "per week (last 7 days) · guideline " + fmt(mvpaMin), muted: m.mvpa_week == null});
     const tr = state.mode === "live" ? section("trends") : (state.snap ? {data: state.snap.trends30} : {});
     const series = tr.data && tr.data.series;
     const act = section("activity");
     if (!series && !act.data) { errorBox(g, act, "activity data"); return; }
     for (const k of ["steps_7d", "mvpa_week", "sedentary_h", "weight_trend_kg"]) {
-      const meta = metricMeta(k), c = el("div", "card");
-      const rows = (series && series[k]) || [];
-      const last = [...rows].reverse().find((r) => r.value != null);
-      const head = el("div", "charthead"); head.append(el("h3", null, meta.label), el("span", "num", last ? fmt(last.value, meta.dp) + " " + meta.unit : "—"));
-      const ch = el("div", "chart"); c.append(head, ch);
-      if (meta.refLabel) c.append(el("p", "faint", "Reference: " + meta.refLabel));
+      const extra = [];
       if (k === "weight_trend_kg" && act.data) {
         const w = act.data.weigh_ins || [];
-        c.append(el("p", "muted", w.length ? w.length + " weigh-in" + (w.length > 1 ? "s" : "") + " in 30 days, last " + shortDay(w[w.length - 1].date) + ": " + fmt(w[w.length - 1].kg, 1) + " kg"
-                                            : "No weigh-ins in 30 days. A trend needs about 3 in 14 days."));
+        extra.push(w.length ? w.length + " weigh-in" + (w.length > 1 ? "s" : "") + " in 30 days, last " + shortDay(w[w.length - 1].date) + ": " + fmt(w[w.length - 1].kg, 1) + " kg"
+                            : "No weigh-ins in 30 days. A trend needs about 3 in 14 days.");
       }
-      g.append(c);
-      requestAnimationFrame(() => lineChart(ch, rows, {color: meta.color, ref: meta.ref, band: meta.band, dp: meta.dp, unit: meta.unit}));
+      g.append(trendCard(k, (series && series[k]) || [], extra));
     }
-    const ov = section("overview"), m = (ov.data && ov.data.metrics) || {};
     if (m.strength_days_week != null || m.azm_week != null) {
       const c = el("div", "card"); c.append(el("h3", null, "Also this week"));
-      const row = el("div", "row"); row.style.marginTop = "6px";
-      const kv = (b, s) => { const d = el("div", "kv"); d.append(el("b", "num", b), el("span", null, s)); row.append(d); };
-      if (m.strength_days_week != null) kv(fmt(m.strength_days_week, 1), "strength days/week (target 2)");
-      if (m.azm_week != null) kv(fmt(m.azm_week), "Google zone minutes/week (heart-rate based, reads high at a high resting HR)");
+      const row = el("div", "stats");
+      if (m.strength_days_week != null) kvInto(row, fmt(m.strength_days_week, 1), "strength days/week (target 2)");
+      if (m.azm_week != null) kvInto(row, fmt(m.azm_week), "Active zone minutes/week (heart-rate based, reads high at a high resting HR)");
       c.append(row); g.append(c);
     }
     const t = $("sessTable"); t.replaceChildren();
@@ -780,54 +1181,96 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     });
   }
 
+  function renderRunWeeks(host, runs, endIso) {
+    host.replaceChildren();
+    const monday = (iso) => { const t = new Date(iso + "T12:00:00"); return isoAdd(iso, -((t.getDay() + 6) % 7)); };
+    const cur = monday(endIso);
+    const weeks = Array.from({length: 12}, (_, k) => isoAdd(cur, -7 * (11 - k)));
+    const km = Object.fromEntries(weeks.map((w) => [w, 0]));
+    runs.forEach((x) => { if (x.local_date) { const w = monday(x.local_date); if (own(km, w)) km[w] += x.distance_km || 0; } });
+    const vals = weeks.map((w) => km[w]), top = Math.max(1, ...vals);
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const chart = el("div", "wkdist");
+    chart.setAttribute("role", "img");
+    chart.setAttribute("aria-label", "Weekly running distance, last 12 weeks: " + weeks.map((w, i) => shortDay(w) + " " + fmt(vals[i], 1) + " km").join(", "));
+    weeks.forEach((w, i) => {
+      const col = el("div", "col" + (w === cur ? " cur" : ""));
+      col.append(el("div", "v num", vals[i] ? fmt(vals[i], vals[i] < 10 ? 1 : 0) : ""));
+      const b = el("div", "b grow-y"); b.style.height = `calc((100% - 18px) * ${vals[i] / top})`; b.style.setProperty("--i", i);
+      col.append(b); chart.append(col);
+    });
+    const axis = el("div", "wkaxis"); axis.append(el("span", null, "Week of " + shortDay(weeks[0])), el("span", null, "This week"));
+    host.append(el("p", "muted num", "This week " + fmt(km[cur], 1) + " km · 12-week average " + fmt(avg, 1) + " km"), chart, axis);
+  }
+
   function renderRunning() {
     const sec = section("running"), card = $("planCard");
-    card.replaceChildren(); card.className = "card stripe";
-    if (!sec.data) { errorBox(card, sec, "running data"); }
+    card.replaceChildren(); card.className = "card race";
+    if (!sec.data) { errorBox(card, sec, "running data"); $("runWeeks").replaceChildren(); $("runCards").replaceChildren(); }
     else {
       const plan = sec.data.plan, pc = plan && plan.components;
-      if (pc && pc.status === "no_race") card.append(el("h2", null, "No race configured"),
+      if (pc && pc.status === "no_race") card.append(el("h3", null, "Race plan"), el("div", "big", "No race configured"),
         ...noRaceLines(pc).map((l) => el("p", "muted", l)));
       else if (!pc) card.append(el("p", "muted", "No race plan yet."));
       else {
         const st = pc.status || plan.status;
-        card.classList.add(st === "on_track" ? "ok" : st === "tight" ? "warn" : "bad");
-        const head = el("div", "charthead"); head.append(el("h2", null, st.replace(/_/g, " ")), el("span", "muted", "race " + dayFmt(pc.race_date)));
+        const head = el("div", "race-head"); head.append(pill(planTone(st), planWord(st)), el("span", "muted", "Race day " + dayFmt(pc.race_date)));
         card.append(head);
-        const row = el("div", "row"); row.style.margin = "8px 0";
-        const kv = (b, s) => { const d = el("div", "kv"); d.append(el("b", "num", b), el("span", null, s)); row.append(d); };
+        const race = pc.race_km || 10, start = pc.planning_km || pc.longest_km || pc.first_run_km || 0, safe = pc.safe_by_race_km;
+        const hero = el("div", "race-hero");
+        hero.append(el("span", "hero-num num", fmt(race, race % 1 ? 1 : 0)), el("span", "unit", "km race"));
+        if (pc.weeks_left != null) hero.append(el("span", "muted", "· " + pc.weeks_left + " weeks to go"));
+        card.append(hero);
+        const row = el("div", "stats");
+        const kv = (b, s) => kvInto(row, b, s);
         kv(pc.weeks_left != null ? String(pc.weeks_left) : "—", "weeks left");
         kv(pc.weeks_needed != null ? String(pc.weeks_needed) : "—", "weeks a gradual build needs");
         if (pc.weeks_short) kv(String(pc.weeks_short), "weeks short");
         kv(pc.longest_km != null ? fmt(pc.longest_km, 1) + " km" : "none yet", "longest run");
         if (plan.riegel_min != null) kv(fmt(plan.riegel_min) + " min", "finish-time estimate");
         card.append(row);
-        const race = pc.race_km || 10, start = pc.planning_km || pc.longest_km || pc.first_run_km || 0, safe = pc.safe_by_race_km;
         const tk = el("div", "track"); const max = Math.max(race, safe || 0) * 1.05;
         const P = (v) => (v / max * 100) + "%";
         tk.append(el("div", "line"));
-        const fill = el("div", "fill"); fill.style.width = P(safe || start); tk.append(fill);
-        const pin = (v, col, lab) => { const p = el("div", "pin"); p.style.left = P(v); p.style.background = `var(${col})`; tk.append(p);
-                                        const l = el("div", "lab", lab); l.style.left = P(v); tk.append(l); };
-        if (start) pin(start, "--muted", (pc.longest_km != null ? "now " : "first run ") + fmt(start, 1) + " km");
-        if (safe != null) pin(safe, "--run", "safe by race day " + fmt(safe, 1) + " km");
-        pin(race, "--fg", "goal " + fmt(race, 0) + " km");
-        card.append(tk);
-        card.append(el("p", "muted", st === "on_track" ? "A gradual build of about 10% a week, with easier cutback weeks, reaches race distance in time."
-          : st === "tight" ? "Tight but doable: keep increases to about 10% a week and keep the cutback weeks."
-          : "Don't increase by more than about 10% a week to catch up. Consider run-walk on race day or a later race."));
+        const fill = el("div", "fill grow"); fill.style.width = P(safe || start); tk.append(fill);
+        const legend = el("div", "track-legend");
+        const pin = (v, col, lab) => {
+          const p = el("div", "pin"); p.style.left = P(v); p.style.background = `var(${col})`; tk.append(p);
+          const l = el("span"), dot = el("i"); dot.style.background = `var(${col})`; l.append(dot, document.createTextNode(lab)); legend.append(l);
+        };
+        if (start) pin(start, "--muted", (pc.longest_km != null ? "Now " : "First run ") + fmt(start, 1) + " km");
+        if (safe != null) pin(safe, "--run", "Safe by race day " + fmt(safe, 1) + " km");
+        pin(race, "--fg", "Goal " + fmt(race, 0) + " km");
+        tk.setAttribute("aria-hidden", "true");
+        card.append(tk, legend);
+        const advice = planAdvice(pc, dayFmt);
+        if (advice) card.append(el("p", "muted", advice));
         if (plan.evidence_ids) card.append(evidence(plan.evidence_ids));
       }
+      const runs = sec.data.runs || [];
+      renderRunWeeks($("runWeeks"), runs, sec.data.end || todayIso());
+      const rc = $("runCards"); rc.replaceChildren();
+      if (!runs.length) rc.append(el("p", "muted", "No runs logged yet."));
+      [...runs].reverse().slice(0, 6).forEach((x) => {
+        const {easy, all} = zones(x);
+        const c = el("article", "card runcard");
+        c.append(el("p", "eyebrow", dayFmt(x.local_date)));
+        const dist = el("div", "rc-dist"); dist.append(el("span", "num", x.distance_km != null ? fmt(x.distance_km, 2) : "—"), el("span", "unit", "km"));
+        c.append(dist, el("p", "rc-stats num", [paceOf(x), x.duration_min != null ? fmt(x.duration_min) + " min" : null, x.avg_hr != null ? fmt(x.avg_hr) + " bpm" : null].filter(Boolean).join(" · ")));
+        const pills = el("div", "rc-pills");
+        if (all) pills.append(pill("", "Easy " + Math.round(easy / all * 100) + "%"));
+        if (x.spike_class) pills.append(pill(has(SPIKE_TONE, x.spike_class) ? SPIKE_TONE[x.spike_class] : "warn", "Spike: " + x.spike_class));
+        if (pills.childNodes.length) c.append(pills);
+        rc.append(c);
+      });
+      $("runAllLabel").textContent = "All runs, last 90 days (" + runs.length + ")";
       const t = $("runTable"); t.replaceChildren();
       const head = el("tr"); ["Date", "Distance", "Pace", "Avg HR", "Easy (Z0–2)", "Spike"].forEach((h, i) => head.append(el("th", i ? "r" : null, h))); t.append(head);
-      const runs = sec.data.runs || [];
       if (!runs.length) { const r = el("tr"); const c = el("td", "muted", "No runs logged yet."); c.colSpan = 6; r.append(c); t.append(r); }
       [...runs].reverse().forEach((x) => {
-        const easy = ["z0_min", "z1_min", "z2_min"].reduce((a, k) => a + (x[k] || 0), 0);
-        const all = ["z0_min", "z1_min", "z2_min", "z3_min", "z4_min", "z5_min"].reduce((a, k) => a + (x[k] || 0), 0);
-        const pace = x.pace_min_km ? Math.floor(x.pace_min_km) + ":" + String(Math.round((x.pace_min_km % 1) * 60)).padStart(2, "0") + " /km" : "—";
+        const {easy, all} = zones(x);
         const r = el("tr");
-        r.append(el("td", null, shortDay(x.local_date)), el("td", "r", x.distance_km != null ? fmt(x.distance_km, 2) + " km" : "—"), el("td", "r", pace),
+        r.append(el("td", null, shortDay(x.local_date)), el("td", "r", x.distance_km != null ? fmt(x.distance_km, 2) + " km" : "—"), el("td", "r", paceOf(x)),
                  el("td", "r", fmt(x.avg_hr)), el("td", "r", all ? Math.round(easy / all * 100) + "%" : "—"), el("td", "r", x.spike_class || "—"));
         t.append(r);
       });
@@ -839,54 +1282,105 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     const sec = section("bodyage"), head = $("ageHead"), lev = $("ageLevers"), comps = $("ageComps");
     if (!sec.data) { [head, lev, comps].forEach((h) => errorBox(h, sec, "body age")); return; }
     const b = sec.data, d = b.details || {};
-    head.replaceChildren(el("h3", null, "Body age · as of " + shortDay(b.as_of)), el("div", "big num", d.display || fmt(b.value, 1)));
-    head.lastChild.style.fontSize = "38px";
-    head.append(el("p", "muted", (d.age ? "Your age " + d.age + ". " : "") + (b.status === "provisional" ? "Provisional: not enough days yet for full confidence. " : "") +
+    head.replaceChildren();
+    const disp = d.display || fmt(b.value, 1);
+    const parts = /^(\S+)\s*\((.*)\)$/.exec(disp);
+    const wrap = el("div", "agehero"), left = el("div"), side = el("div", "side");
+    left.append(el("p", "eyebrow", "Body age · as of " + shortDay(b.as_of)));
+    const row = el("div", "hero-row"), big = el("span", "hero-num num", parts ? parts[1] : disp);
+    row.append(big, el("span", "unit", "years")); left.append(row);
+    if (parts) left.append(el("p", "muted", cap(parts[2])));
+    const pills = el("div", "pills");
+    if (b.status === "provisional") pills.append(pill("", "Provisional"));
+    const range = parts && /(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)/.exec(parts[2]);  // the estimate's own range
+    if (d.age && range) {
+      const lo = Number(range[1]), hi = Number(range[2]);
+      pills.append(pill("", d.age > hi ? "Whole range below your age (" + d.age + ")" : d.age < lo ? "Whole range above your age (" + d.age + ")" : "Your age (" + d.age + ") is within the range"));
+    }
+    if (pills.childNodes.length) left.append(pills);
+    side.append(el("p", "muted", (d.age ? "Your age " + d.age + ". " : "") + (b.status === "provisional" ? "Provisional: not enough days yet for full confidence. " : "") +
       (d.change_30d != null ? "Trend: " + (Math.abs(d.change_30d) < 1 ? "stable over 30 days" : (d.change_30d > 0 ? "+" : "") + fmt(d.change_30d, 1) + " y over 30 days") + ". " : "")));
-    head.append(el("p", "faint", d.caveat || ""));
-    (d.missing || []).forEach((k) => head.append(el("p", "muted", "Not included: " + (COMP[k] || k))));
-    if (b.evidence_ids) head.append(evidence(b.evidence_ids));
+    side.append(el("p", "caveat", d.caveat || "A population-statistics estimate, not a medical assessment."));
+    (d.missing || []).forEach((k) => side.append(el("p", "muted", "Not included: " + (COMP[k] || k))));
+    if (b.evidence_ids) side.append(evidence(b.evidence_ids));
+    wrap.append(left, side); head.append(wrap);
+    if (parts && /^\d+(\.\d+)?$/.test(parts[1])) countUp(big, Number(parts[1]), (parts[1].split(".")[1] || "").length, 0);
     lev.replaceChildren();
     const levers = Object.entries(d.levers || {}).sort((a, c) => a[1] - c[1]);
     if (!levers.length) lev.append(el("span", "muted", "No levers computed."));
-    levers.forEach(([k, v]) => { const p = el("p"); p.append(el("b", "num", fmt(v, 1) + " y "), document.createTextNode(LEVER[k] || k)); lev.append(p); });
+    else {
+      const ol = el("ol", "levers");
+      levers.forEach(([k, v], i) => { const li = el("li"); li.append(el("span", "rank num", String(i + 1)), el("span", null, LEVER[k] || k), el("b", "num", fmt(v, 1) + " y")); ol.append(li); });
+      lev.append(ol);
+    }
     comps.replaceChildren();
     const entries = Object.entries(d.components || {});
     const maxAbs = Math.max(1, ...entries.map(([, c]) => Math.abs(c.years || 0)));
-    entries.sort((a, c) => (c[1].years || 0) - (a[1].years || 0)).forEach(([k, c]) => {
+    entries.sort((a, c) => (c[1].years || 0) - (a[1].years || 0)).forEach(([k, c], i) => {
       comps.append(el("span", null, COMP[k] || k));
-      const ax = el("div", "axis");
+      const ax = el("div", "axis"); ax.setAttribute("aria-hidden", "true");
       if (c.years != null) {
-        const bar = el("i"); const w = Math.abs(c.years) / maxAbs * 50;
+        const bar = el("i", "grow"); const w = Math.abs(c.years) / maxAbs * 50;
         bar.style.width = w + "%"; bar.style.left = c.years >= 0 ? "50%" : (50 - w) + "%";
+        bar.style.transformOrigin = c.years >= 0 ? "left center" : "right center"; bar.style.setProperty("--i", i);
         bar.style.background = c.years >= 0 ? "var(--age)" : "var(--ok)"; ax.append(bar);
       }
-      comps.append(ax, el("span", "num " + (c.years == null ? "faint" : ""), c.years == null ? (c.excluded ? "estimated, not scored" : "—") : (c.years >= 0 ? "+" : "") + fmt(c.years, 1) + " y"));
+      comps.append(ax, el("span", "v num" + (c.years == null ? " muted" : ""), c.years == null ? (c.excluded ? "estimated, not scored" : "—") : (c.years >= 0 ? "+" : "") + fmt(c.years, 1) + " y"));
     });
   }
 
   function render() {
     renderHeader();
     const tab = state.tab;
+    state.animNow = state.fresh && motionOK() && state.mode !== "connecting";  // a snapshot render is cut off when live data lands
+    const page = $("page-" + tab);
+    if (page) page.classList.toggle("anim", state.animNow);
     if (tab === "today") renderToday();
     if (tab === "trends") renderTrends();
     if (tab === "sleep") renderSleep();
     if (tab === "activity") renderActivity();
     if (tab === "running") renderRunning();
     if (tab === "bodyage") renderBodyAge();
+    if (state.fresh && state.mode !== "connecting" && section(PAGE_SECTION[tab]).data) state.fresh = false;  // animate once per tab view, never on resize
+    state.animNow = false;
+  }
+
+  function syncTabs(tab) {
+    document.querySelectorAll(".tab").forEach((b) => {
+      const on = b.dataset.tab === tab;
+      b.setAttribute("aria-selected", String(on)); b.tabIndex = on ? 0 : -1;
+    });
   }
 
   function selectTab(tab) {
     if (!TABS.includes(tab)) tab = TABS[0];  // a hidden or unknown tab opens the first configured one
+    const changed = tab !== state.tab;
     state.tab = tab;
-    document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+    if (changed) state.fresh = true;
+    syncTabs(tab);
     document.querySelectorAll("[data-page]").forEach((p) => { p.hidden = p.dataset.page !== tab; });
+    const page = $("page-" + tab);
+    if (page && changed) { page.classList.remove("enter"); void page.offsetWidth; page.classList.add("enter"); }
+    const btn = $("tab-" + tab), nav = document.querySelector(".tabs");
+    if (btn && nav && (btn.offsetLeft < nav.scrollLeft || btn.offsetLeft + btn.offsetWidth > nav.scrollLeft + nav.clientWidth)) {
+      nav.scrollLeft = btn.offsetLeft - 16;
+    }
     try { history.replaceState(null, "", "#" + tab); } catch (e) { /* framed */ }
     render();
   }
 
   // ---------- controls ----------
   document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => selectTab(b.dataset.tab)));
+  document.querySelector(".tabs").addEventListener("keydown", (e) => {
+    // arrow keys move between tabs (and select them), Home/End jump to the ends; Enter/Space work as on any button
+    const tabs = [...document.querySelectorAll(".tabs .tab")].filter((b) => !b.hidden);
+    const i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    const j = e.key === "ArrowRight" ? (i + 1) % tabs.length : e.key === "ArrowLeft" ? (i - 1 + tabs.length) % tabs.length
+      : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : -1;
+    if (j < 0) return;
+    e.preventDefault(); tabs[j].focus(); selectTab(tabs[j].dataset.tab);
+  });
   $("refreshBtn").addEventListener("click", async () => {
     $("refreshBtn").disabled = true; await loadSnapshot(); await loadLive(Object.keys(SOURCES()), true); render();
   });
@@ -914,7 +1408,7 @@ details.ev ul { margin: 4px 0 0; padding-left: 16px; }
     TABS.forEach((t) => { const btn = $("tab-" + t); if (btn && nav) nav.append(btn); });
     if (TABS.length && !TABS.includes(state.tab)) {
       state.tab = TABS[0];
-      document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === state.tab)));
+      syncTabs(state.tab);
       document.querySelectorAll("[data-page]").forEach((p) => { p.hidden = p.dataset.page !== state.tab; });
     }
   })();

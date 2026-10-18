@@ -14,6 +14,9 @@ uv run pytest
 
 The tests use only synthetic data. They need no Fitbit account, no Google credentials and no network.
 
+No band? `uv run python scripts/make_demo_home.py ~/.fitbit-air-demo` builds a demo home with made-up data,
+then `FITBIT_AIR_HOME=~/.fitbit-air-demo uv run fitbit-air report`.
+
 ## Ground rules
 
 - **Test first.** Write a failing test, make it pass, then tidy up. Every change comes with tests.

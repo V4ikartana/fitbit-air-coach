@@ -122,7 +122,8 @@ def test_readme_names_the_repo_and_package_and_is_honest_about_network_use():
     r = (ROOT / "README.md").read_text()
     flat = " ".join(r.split())
     assert "The repository is fitbit-air-coach; the package and command are `fitbit-air`." in flat
-    assert "fonts.googleapis.com" in r and "under 240 KB" in r
+    assert "under 240 KB" in r and "uses your system fonts and loads no outside scripts, fonts or images" in flat
+    assert "fonts.googleapis.com" not in r  # the page no longer fetches web fonts
     assert "makes no other network calls" not in r
 
 
