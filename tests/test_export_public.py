@@ -111,6 +111,13 @@ def test_not_allowed(rel):
     assert ex.selected(rel) is False
 
 
+@pytest.mark.parametrize("rel", ["video/src/Root.tsx", "video/package.json", "video/public/voice/s1-1.wav",
+                                 "tests/test_video_facts.py", "tests/test_video_still_dashboard.py",
+                                 "tests/test_video_voice.py"])
+def test_video_is_never_exported(rel):
+    assert ex.selected(rel) is False
+
+
 def test_refuses_non_empty_dest_and_findings(tmp_path):
     src = _src(tmp_path)
     dest = tmp_path / "out"

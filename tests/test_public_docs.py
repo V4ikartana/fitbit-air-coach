@@ -157,3 +157,15 @@ def test_contributing_explains_the_maintainer_tools():
     for script in ("export_public.py", "build_private_scan_list.py", "make_fixtures.py"):
         assert script in section
     assert "not needed to contribute" in section
+
+
+def test_readme_separates_local_storage_from_ai_processing():
+    """The README must not call the data 'local' without saying what the coach and dashboard send to Anthropic."""
+    r = (ROOT / "README.md").read_text()
+    flat = " ".join(r.split())
+    assert "Your data stays local" not in r
+    assert "local-first, not fully offline" in flat.lower()
+    assert "sent to Anthropic" in flat
+    assert "Privacy note:" in r
+    assert "they need no AI service" in flat
+

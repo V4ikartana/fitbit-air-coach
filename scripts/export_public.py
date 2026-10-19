@@ -8,8 +8,8 @@ Usage: uv run python scripts/export_public.py <dest> [--src <repo>]
   (assume-unchanged, skip-worktree). An allowed file that is not committed, a selected file with staged or unstaged
   changes, or a selected file missing from the working tree stops the export, and so does a committed symlink or
   submodule. A --src that is a subfolder of a checkout is refused. Outside git, a walk of the folder.
-- Only paths matching ALLOW are copied, and DENY (matched case-insensitively) always wins: real fixtures, internal
-  plans, caches, databases, secrets, env files, data, keys, tokens, virtualenvs and git data.
+- Only paths matching ALLOW are copied, and DENY (matched case-insensitively) always wins: real fixtures, the private
+  video's tests, internal plans, caches, databases, secrets, env files, data, keys, tokens, virtualenvs and git data.
 - A symlink that would ship (selected, or a folder under an allowed path) stops the export before anything is
   copied; symlinks elsewhere (a local venv, say) are ignored. Error messages show a path that matches a generic path
   rule or a private pattern only in its withheld (sha256) form.
@@ -41,7 +41,7 @@ ALLOW = [
     ".github/**",
 ]
 DENY = [
-    "tests/fixtures/real/**", "tests/test_real_fixtures.py", "docs/superpowers/**",
+    "tests/fixtures/real/**", "tests/test_real_fixtures.py", "tests/test_video_*.py", "docs/superpowers/**",
     "**/__pycache__/**", "**/*.pyc", "**/*.db*", "**/*.sqlite*",
     "**/.git", "**/.git/**", "**/.venv/**", "**/.pytest_cache/**", "**/.ruff_cache/**", "**/.mypy_cache/**",
     "**/node_modules/**", "**/*.egg-info/**", "**/.DS_Store", "**/.superpowers/**", "**/.claude/**",

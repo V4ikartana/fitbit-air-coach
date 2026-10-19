@@ -6,6 +6,10 @@ science, and talk to it through Claude as a personal coach.
 > Status: experimental (v0.1.0). Unofficial — not affiliated with or endorsed by Fitbit, Google or Anthropic.
 > Not medical advice. See [DISCLAIMER.md](DISCLAIMER.md).
 
+**Local-first, not offline.** Your health data is stored on your Mac, and the project runs no server or database
+of its own. When you use the Claude coach or publish the dashboard, the data they read is sent to Anthropic for
+processing. See [Security and privacy](#security-and-privacy).
+
 The repository is fitbit-air-coach; the package and command are `fitbit-air`.
 
 ## What it does
@@ -78,6 +82,10 @@ The background job syncs every 2 hours, at login, and after wake if a run was mi
 Testing mode, Google expires the login every 7 days; run `fitbit-air auth` again when you are asked to. The full
 walkthrough, including the coach registration and the dashboard, is [docs/setup.md](docs/setup.md).
 
+> **Privacy note:** sync, analysis and `report` work entirely on your Mac, without Claude. Turning on the MCP coach
+> or publishing the dashboard sends some of your health data to Anthropic. See
+> [Security and privacy](#security-and-privacy).
+
 ## Configuration
 
 Everything personal lives in `~/.fitbit-air` (or the folder in `FITBIT_AIR_HOME`), never in the repo.
@@ -123,20 +131,29 @@ coach and the dashboard snapshot all read those tables through the same function
 
 ## Security and privacy
 
-- **Your data stays local:** the database, config and logs live in `~/.fitbit-air`. The folder is 0700 and the
-  files fitbit-air writes are 0600.
-- **Your login:** the Google refresh token is stored in the macOS Keychain. Access tokens are kept in memory only.
+fitbit-air is local-first, not fully offline.
+
+- **Stored on your Mac:** the database, config and logs live in `~/.fitbit-air`. The folder is 0700 and the files
+  fitbit-air writes are 0600. The SQLite database never leaves your Mac.
+- **Google:** fitbit-air logs in with your own OAuth client and calls the Google Health API v4 to read your data.
   The OAuth scopes are read-only, and nothing is ever written to Google.
-- **What leaves your Mac:**
-  - requests to Google: the OAuth login and the Google Health API calls;
-  - whatever Claude reads into a conversation through the coach;
-  - the dashboard snapshot (under 240 KB), if you publish the dashboard: your data status and overview, 30- and
-    90-day trends, the last 14 days of sleep, 30 days of activity and 90 days of runs, body age and your active
-    coach notes, stored privately in your Claude Artifact.
-- **No telemetry:** apart from the above, the code sends nothing anywhere. The dashboard page is self-contained:
-  it uses your system fonts and loads no outside scripts, fonts or images. There is no analytics or usage
-  reporting.
+- **Claude (the MCP coach):** when you ask Claude something, the results of the tools it calls (scores, trends,
+  sleep, runs, journal entries, or rows from a read-only SQL query) are sent to Anthropic as part of that
+  conversation.
+- **Dashboard:** in Claude Desktop the page gets live data from the coach through Claude Desktop. If you publish
+  it, the daily snapshot (under 240 KB) is stored in your Claude Artifact: your data status and overview, 30- and
+  90-day trends, the last 14 days of sleep, 30 days of activity and 90 days of runs, body age and your active coach
+  notes.
+  "Private" means only you can open it, not that it stays on your Mac.
+- **No project backend or telemetry:** the project runs no server or database of its own. Apart from the above, the
+  code sends nothing anywhere. The dashboard page is self-contained: it uses your system fonts and loads no outside
+  scripts, fonts or images. There is no analytics or usage reporting.
+- **Your login:** the Google refresh token is stored in the macOS Keychain. Access tokens are kept in memory only.
 - **Plugins** run with your user's permissions. Only install code you wrote or have read.
+
+Using the coach or publishing the dashboard means a third party processes sensitive health data. Read Anthropic's
+privacy and data retention terms before you turn these on. If you prefer not to share data with Claude, use sync,
+analysis and `fitbit-air report` on their own; they need no AI service.
 
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
